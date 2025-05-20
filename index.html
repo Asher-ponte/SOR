@@ -397,6 +397,7 @@
         let currentPhotoDataUrl = null; // Stores the initial photo as Data URL
         let observations = [];
         let selectedObservationIndex = null;
+        let editingIndex = null; // To store the index of the observation being edited
 
         // Page navigation
         function showPage(pageId) {
@@ -450,99 +451,99 @@
             const actionMap = {
                 // Storage and Material Observations
                 "Leaning stacks": {
-                    corrective: "Restrict access to unstable storage areas and post warning signs.\\nRe-stack leaning materials/FG and secure with straps or shrink wrap.\\nConduct an immediate inspection to stabilize other at-risk stacks.",
-                    preventive: "Develop an SOP for proper stacking and securing of materials/FG.\\nTrain staff on safe stacking techniques and load limits.\\nSchedule weekly stability checks as part of routine inspections."
+                    corrective: "Restrict access to unstable storage areas and post warning signs.\nRe-stack leaning materials/FG and secure with straps or shrink wrap.\nConduct an immediate inspection to stabilize other at-risk stacks.",
+                    preventive: "Develop an SOP for proper stacking and securing of materials/FG.\nTrain staff on safe stacking techniques and load limits.\nSchedule weekly stability checks as part of routine inspections."
                 },
 
                 "Loose strapping or uneven stacking": {
-                    corrective: "Adjust slightly tilted pallets to stable positions.\\nMonitor affected stacks for any changes.",
-                    preventive: "Include stability checks in daily routine inspections.\\nTrain staff to recognize early signs of instability."
+                    corrective: "Adjust slightly tilted pallets to stable positions.\nMonitor affected stacks for any changes.",
+                    preventive: "Include stability checks in daily routine inspections.\nTrain staff to recognize early signs of instability."
                 },
                 "slight tilting of pallets": {
-                    corrective: "Adjust slightly tilted pallets to stable positions.\\nMonitor affected stacks for any changes.",
-                    preventive: "Include stability checks in daily routine inspections.\\nTrain staff to recognize early signs of instability."
+                    corrective: "Adjust slightly tilted pallets to stable positions.\nMonitor affected stacks for any changes.",
+                    preventive: "Include stability checks in daily routine inspections.\nTrain staff to recognize early signs of instability."
                 },
                 "Damaged racking": {
-                    corrective: "Cordon off areas with damaged racking and prohibit use until repaired.\\nClear congestion by relocating excess materials to designated zones.\\nTag damaged racks for urgent repair or replacement.",
-                    preventive: "Implement monthly racking inspection and maintenance schedules.\\nEnforce storage capacity limits to prevent congestion.\\nTrain forklift operators on safe navigation to avoid racking damage."
+                    corrective: "Cordon off areas with damaged racking and prohibit use until repaired.\nClear congestion by relocating excess materials to designated zones.\nTag damaged racks for urgent repair or replacement.",
+                    preventive: "Implement monthly racking inspection and maintenance schedules.\nEnforce storage capacity limits to prevent congestion.\nTrain forklift operators on safe navigation to avoid racking damage."
                 },
                 "Congestion creates risks": {
-                    corrective: "Prioritize clearance of most congested areas.\\nSchedule immediate repairs for critical rack damage.",
-                    preventive: "Increase frequency of storage area inspections.\\nImplement visual management for maximum capacity indicators."
+                    corrective: "Prioritize clearance of most congested areas.\nSchedule immediate repairs for critical rack damage.",
+                    preventive: "Increase frequency of storage area inspections.\nImplement visual management for maximum capacity indicators."
                 },
                 "Pallets have broken boards": {
-                    corrective: "Remove unusable pallets from service and dispose of or repair them.\\nClean pallets with minor contamination using approved agents.\\nSegregate damaged/contaminated pallets to prevent use.",
-                    preventive: "Implement a pallet inspection checklist before use.\\nSource pallets from verified suppliers with quality certifications.\\nStore pallets in clean, dry areas to prevent contamination."
+                    corrective: "Remove unusable pallets from service and dispose of or repair them.\nClean pallets with minor contamination using approved agents.\nSegregate damaged/contaminated pallets to prevent use.",
+                    preventive: "Implement a pallet inspection checklist before use.\nSource pallets from verified suppliers with quality certifications.\nStore pallets in clean, dry areas to prevent contamination."
                 },
                 "Pallet with minor cracks": {
-                    corrective: "Remove pallets from active use until repaired or cleaned.\\nSet up a quarantine area for questionable pallets.",
-                    preventive: "Establish pallet maintenance procedures.\\nTrain staff on pallet inspection criteria."
+                    corrective: "Remove pallets from active use until repaired or cleaned.\nSet up a quarantine area for questionable pallets.",
+                    preventive: "Establish pallet maintenance procedures.\nTrain staff on pallet inspection criteria."
                 },
                 "Severe Infestation": {
-                    corrective: "Quarantine infested pallets and remove them from the facility.\\nEngage pest control services to treat affected areas immediately.\\nInspect adjacent pallets/materials for pest spread.",
-                    preventive: "Establish a monthly pest control program with inspections and treatments.\\nUse pest-resistant pallet materials (e.g., treated wood or plastic).\\nMaintain cleanliness in storage areas to reduce pest attractants."
+                    corrective: "Quarantine infested pallets and remove them from the facility.\nEngage pest control services to treat affected areas immediately.\nInspect adjacent pallets/materials for pest spread.",
+                    preventive: "Establish a monthly pest control program with inspections and treatments.\nUse pest-resistant pallet materials (e.g., treated wood or plastic).\nMaintain cleanliness in storage areas to reduce pest attractants."
                 },
                 "Damaged FG": {
-                    corrective: "Segregate damaged FG for rework, disposal, or return.\\nRelocate at-risk FG to proper storage conditions.\\nDocument damage for quality control and supplier feedback.",
-                    preventive: "Train staff on proper FG handling and storage techniques.\\nImplement a quality control process for incoming FG.\\nConduct regular inspections of FG storage areas."
+                    corrective: "Segregate damaged FG for rework, disposal, or return.\nRelocate at-risk FG to proper storage conditions.\nDocument damage for quality control and supplier feedback.",
+                    preventive: "Train staff on proper FG handling and storage techniques.\nImplement a quality control process for incoming FG.\nConduct regular inspections of FG storage areas."
                 },
 
                 // Workplace and Welfare Facility Observations
                 "cluttered workplace": {
-                    corrective: "Conduct thorough cleaning, removing debris and clutter.\\nAssign staff to organize workspaces immediately.",
-                    preventive: "Implement a daily cleaning schedule with assigned responsibilities.\\nIntroduce a 5S program (Sort, Set, Shine, Standardize, Sustain).\\nConduct monthly hygiene and maintenance audits."
+                    corrective: "Conduct thorough cleaning, removing debris and clutter.\nAssign staff to organize workspaces immediately.",
+                    preventive: "Implement a daily cleaning schedule with assigned responsibilities.\nIntroduce a 5S program (Sort, Set, Shine, Standardize, Sustain).\nConduct monthly hygiene and maintenance audits."
                 },
                 "Floor, Walls, Ceiling, and Roofing Condition": {
-                    corrective: "Cordon off areas with critical damage (e.g., large cracks, leaks).\\nArrange urgent repairs for roofing leaks and structural damage.\\nApply temporary fixes (e.g., sealants) until permanent repairs are completed.",
-                    preventive: "Schedule quarterly structural inspections by qualified personnel.\\nMaintain a budget for ongoing facility maintenance.\\nAddress minor issues promptly to prevent escalation."
+                    corrective: "Cordon off areas with critical damage (e.g., large cracks, leaks).\nArrange urgent repairs for roofing leaks and structural damage.\nApply temporary fixes (e.g., sealants) until permanent repairs are completed.",
+                    preventive: "Schedule quarterly structural inspections by qualified personnel.\nMaintain a budget for ongoing facility maintenance.\nAddress minor issues promptly to prevent escalation."
                 },
                 "Frayed wires, exposed conductors, or damaged outlets": {
-                    corrective: "Disconnect and remove damaged cords/outlets from use.\\nInstall temporary certified replacements.\\nLabel hazardous cords/outlets to prevent use.",
-                    preventive: "Conduct monthly electrical safety inspections.\\nTrain staff to report damaged electrical equipment immediately.\\nUse only certified, heavy-duty cords/outlets."
+                    corrective: "Disconnect and remove damaged cords/outlets from use.\nInstall temporary certified replacements.\nLabel hazardous cords/outlets to prevent use.",
+                    preventive: "Conduct monthly electrical safety inspections.\nTrain staff to report damaged electrical equipment immediately.\nUse only certified, heavy-duty cords/outlets."
                 },
                 "Unsafe": {
-                    corrective: "Shut off power to areas with unsafe wiring and restrict access.\\nEngage a licensed electrician to repair exposed wires/overheating issues.\\nPost temporary warning signs.",
-                    preventive: "Schedule annual electrical system audits by a qualified electrician.\\nImplement routine visual wiring inspections by trained staff.\\nUpgrade outdated wiring to meet safety standards."
+                    corrective: "Shut off power to areas with unsafe wiring and restrict access.\nEngage a licensed electrician to repair exposed wires/overheating issues.\nPost temporary warning signs.",
+                    preventive: "Schedule annual electrical system audits by a qualified electrician.\nImplement routine visual wiring inspections by trained staff.\nUpgrade outdated wiring to meet safety standards."
                 },
                 "Severely Congested": {
-                    corrective: "Clear pathways by relocating obstructing materials to designated areas.\\nHalt forklift/MHE operations in congested areas until cleared.\\nPost temporary signage to redirect traffic.",
-                    preventive: "Designate specific storage zones to prevent overflow.\\nTrain staff on proper material placement.\\nConduct daily checks to ensure clear pathways."
+                    corrective: "Clear pathways by relocating obstructing materials to designated areas.\nHalt forklift/MHE operations in congested areas until cleared.\nPost temporary signage to redirect traffic.",
+                    preventive: "Designate specific storage zones to prevent overflow.\nTrain staff on proper material placement.\nConduct daily checks to ensure clear pathways."
                 },
                 "No Demarcation": {
-                    corrective: "Install temporary signage and floor tape to demarcate areas.\\nRemove items obstructing existing markings.\\nCommunicate new boundaries to staff.",
-                    preventive: "Develop a facility layout plan with permanent, high-visibility markings.\\nRefresh faded markings every 6 months.\\nInclude demarcation standards in training."
+                    corrective: "Install temporary signage and floor tape to demarcate areas.\nRemove items obstructing existing markings.\nCommunicate new boundaries to staff.",
+                    preventive: "Develop a facility layout plan with permanent, high-visibility markings.\nRefresh faded markings every 6 months.\nInclude demarcation standards in training."
                 },
                 "Inadequate": {
-                    corrective: "Replace flickering/dim bulbs with high-lumen, energy-efficient lights.\\nInstall temporary portable lighting in critical areas.\\nRestrict tasks in poorly lit areas until fixed.",
-                    preventive: "Conduct a lighting audit to meet workplace standards (e.g., OSHA).\\nSchedule quarterly maintenance for lighting fixtures.\\nInstall motion-sensor lights in low-traffic areas."
+                    corrective: "Replace flickering/dim bulbs with high-lumen, energy-efficient lights.\nInstall temporary portable lighting in critical areas.\nRestrict tasks in poorly lit areas until fixed.",
+                    preventive: "Conduct a lighting audit to meet workplace standards (e.g., OSHA).\nSchedule quarterly maintenance for lighting fixtures.\nInstall motion-sensor lights in low-traffic areas."
                 },
 
                 // PPE Observations
                 "Non-Compliant": {
-                    corrective: "Issue warnings and provide PPE to non-compliant workers.\\nHalt work in high-risk areas until compliance is achieved.\\nConduct an immediate PPE refresher briefing.",
-                    preventive: "Mandate PPE training during onboarding and annually.\\nAssign supervisors to monitor daily PPE compliance.\\nIntroduce a penalty/reward system for PPE adherence."
+                    corrective: "Issue warnings and provide PPE to non-compliant workers.\nHalt work in high-risk areas until compliance is achieved.\nConduct an immediate PPE refresher briefing.",
+                    preventive: "Mandate PPE training during onboarding and annually.\nAssign supervisors to monitor daily PPE compliance.\nIntroduce a penalty/reward system for PPE adherence."
                 },
                 "No Signage": {
-                    corrective: "Install temporary PPE warning signs in required areas.\\nRemove obstructions blocking signage.\\nDistribute memos clarifying PPE zones.",
-                    preventive: "Install permanent, high-visibility PPE signage.\\nInclude PPE signage in regular safety audits.\\nTrain staff to report missing/faded signage."
+                    corrective: "Install temporary PPE warning signs in required areas.\nRemove obstructions blocking signage.\nDistribute memos clarifying PPE zones.",
+                    preventive: "Install permanent, high-visibility PPE signage.\nInclude PPE signage in regular safety audits.\nTrain staff to report missing/faded signage."
                 },
 
                 // Fire Safety Observations
                 "Inaccessible": {
-                    corrective: "Clear obstructions around extinguishers.\\nRemount extinguishers at standard height (per NFPA guidelines).\\nLabel extinguishers with access instructions.",
-                    preventive: "Include extinguisher accessibility in daily safety checks.\\nTrain staff to avoid placing items near extinguishers.\\nInstall barriers or floor markings to keep access clear."
+                    corrective: "Clear obstructions around extinguishers.\nRemount extinguishers at standard height (per NFPA guidelines).\nLabel extinguishers with access instructions.",
+                    preventive: "Include extinguisher accessibility in daily safety checks.\nTrain staff to avoid placing items near extinguishers.\nInstall barriers or floor markings to keep access clear."
                 },
                 "Inoperable": {
-                    corrective: "Replace/recharge inoperable extinguishers immediately.\\nTag and remove faulty units for servicing.\\nPost signage indicating alternative extinguisher locations.",
-                    preventive: "Contract a fire safety vendor for monthly inspections.\\nMaintain a maintenance log for extinguishers.\\nTrain staff to report expired/damaged units."
+                    corrective: "Replace/recharge inoperable extinguishers immediately.\nTag and remove faulty units for servicing.\nPost signage indicating alternative extinguisher locations.",
+                    preventive: "Contract a fire safety vendor for monthly inspections.\nMaintain a maintenance log for extinguishers.\nTrain staff to report expired/damaged units."
                 },
                 "Obstructed/Unmarked": {
-                    corrective: "Clear obstructions from exit routes immediately.\\nInstall temporary exit signs where markings are missing/faded.\\nConduct an emergency evacuation drill.",
-                    preventive: "Prohibit storage near exits via policy.\\nInstall permanent, illuminated exit signs (per fire codes).\\nConduct quarterly exit route inspections."
+                    corrective: "Clear obstructions from exit routes immediately.\nInstall temporary exit signs where markings are missing/faded.\nConduct an emergency evacuation drill.",
+                    preventive: "Prohibit storage near exits via policy.\nInstall permanent, illuminated exit signs (per fire codes).\nConduct quarterly exit route inspections."
                 },
                 "Non-Functional": {
-                    corrective: "Install temporary battery-powered emergency lights.\\nRepair/replace non-functional lighting units.\\nRestrict access to unlit exit routes during outages.",
-                    preventive: "Schedule monthly emergency lighting tests.\\nMaintain a stock of replacement bulbs/batteries.\\nInclude lighting in annual fire safety audits."
+                    corrective: "Install temporary battery-powered emergency lights.\nRepair/replace non-functional lighting units.\nRestrict access to unlit exit routes during outages.",
+                    preventive: "Schedule monthly emergency lighting tests.\nMaintain a stock of replacement bulbs/batteries.\nInclude lighting in annual fire safety audits."
                 },
 
                 // Default fallback
@@ -564,10 +565,10 @@
         // Login form validation with default credentials and username storage
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const username = document.getElementById('login-username').value; // Get username from new input
+            const username = document.getElementById('login-username').value;
             const password = document.getElementById('password').value;
 
-            loggedInUser = username; // Store the entered username
+            loggedInUser = username;
 
             // Simple validation - replace with actual authentication logic
             if (username === 'admin' && password === 'defaultPass123') {
@@ -584,7 +585,7 @@
         // Registration form validation
         document.getElementById('register-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const username = document.getElementById('reg-username').value; // Get username from new input
+            const username = document.getElementById('reg-username').value;
             const password = document.getElementById('reg-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             if (username && password && confirmPassword) {
@@ -641,7 +642,7 @@
             showPage('hazard-form-page');
         }
 
-        // Hazard form submission
+        // Hazard form submission and update logic
         document.getElementById('hazard-form').addEventListener('submit', function(e) {
             e.preventDefault();
             try {
@@ -661,23 +662,41 @@
                     correctivePhotoFile: null, // Store corrective photo file object
                     correctivePhotoDataUrl: null // Store corrective photo Data URL
                 };
-                observations.push(formData);
-                addToReportTable(formData);
+
+                if (editingIndex !== null) {
+                    // If editing, preserve corrective photo if not re-uploaded
+                    if (observations[editingIndex].correctivePhotoFile) {
+                        formData.correctivePhotoFile = observations[editingIndex].correctivePhotoFile;
+                        formData.correctivePhotoDataUrl = observations[editingIndex].correctivePhotoDataUrl;
+                    }
+                    observations[editingIndex] = formData;
+                    editingIndex = null; // Reset editing index
+                    alert('Report updated successfully!');
+                } else {
+                    observations.push(formData);
+                    alert('Report submitted successfully!');
+                }
+
+                renderObservations(); // Re-render the table to show updated data
                 document.getElementById('hazard-form').reset();
                 document.getElementById('photo-input').value = '';
                 currentPhoto = null;
                 currentPhotoDataUrl = null;
                 document.getElementById('photo-preview').classList.add('hidden');
-                alert('Report submitted successfully!');
                 showPage('report-table-page');
+
+                // Reset the submit button text
+                document.querySelector('#hazard-form button[type="submit"]').textContent = 'Submit Report';
+
             } catch (error) {
-                console.error('Error submitting report:', error);
-                alert('Failed to submit report. Please try again.');
+                console.error('Error submitting/updating report:', error);
+                alert('Failed to submit/update report. Please try again.');
             }
         });
 
+
         // Add to report table with color coding
-        function addToReportTable(data) {
+        function addToReportTable(data, index) {
             const table = document.getElementById('observations-table');
             const card = document.createElement('div');
             card.className = 'mobile-table-card bg-white cursor-pointer hover:bg-gray-50';
@@ -688,13 +707,22 @@
             card.innerHTML = `
                 <p><strong>Timestamp:</strong> ${data.timestamp}</p>
                 <p><strong>Category:</strong> ${data.category}</p>
-                <p><strong>Type:</strong> ${data.observationType}</p> <p><strong>Description:</strong> ${data.description}</p>
+                <p><strong>Type:</strong> ${data.observationType}</p>
+                <p><strong>Description:</strong> ${data.description}</p>
                 <p><strong>Status:</strong> <span class="status-display ${statusClass}">${data.status}</span></p>
                 ${data.correctivePhotoFile ? `<p><strong>Corrective Photo:</strong> ${data.correctivePhotoFile.name}</p>` : ''}
+                <div class="flex justify-end space-x-2 mt-4">
+                    <button onclick="editObservation(${index})" class="bg-yellow-500 text-white px-3 py-1 rounded-md hover:bg-yellow-600 text-sm">Edit</button>
+                    <button onclick="deleteObservation(${index})" class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 text-sm">Delete</button>
+                </div>
             `;
 
-            // Add click event to open corrective photo modal
-            card.addEventListener('click', function() {
+            // Add click event to open corrective photo modal (existing functionality)
+            card.addEventListener('click', function(event) {
+                // Prevent the card click from triggering if a button within the card was clicked
+                if (event.target.tagName === 'BUTTON') {
+                    return;
+                }
                 selectedObservationIndex = observations.findIndex(obs =>
                     obs.timestamp === data.timestamp &&
                     obs.description === data.description
@@ -706,6 +734,48 @@
 
             table.appendChild(card);
         }
+
+        // Function to populate the form for editing an observation
+        function editObservation(index) {
+            editingIndex = index;
+            const obs = observations[index];
+
+            document.getElementById('observation-date').value = obs.timestamp.substring(0, 16); // Format for datetime-local
+            document.getElementById('hazard-category').value = obs.category;
+            document.getElementById('observation-type').value = obs.observationType;
+            document.getElementById('description').value = obs.description;
+            document.getElementById('corrective-actions').value = obs.correctiveActions;
+            document.getElementById('preventive-actions').value = obs.preventiveActions;
+            document.getElementById('location').value = obs.location;
+            document.getElementById('assign-to').value = obs.assignTo;
+            document.getElementById('due-date').value = obs.dueDate;
+            document.getElementById('status').value = obs.status;
+
+            showPage('hazard-form-page');
+
+            // Change the submit button text to "Update Report"
+            document.querySelector('#hazard-form button[type="submit"]').textContent = 'Update Report';
+        }
+
+        // Function to delete an observation
+        function deleteObservation(index) {
+            if (confirm('Are you sure you want to delete this observation?')) {
+                observations.splice(index, 1); // Remove the observation from the array
+                renderObservations(); // Re-render the table
+                alert('Observation deleted successfully!');
+                showPage('report-table-page'); // Ensure we are on the report table page
+            }
+        }
+
+        // Function to re-render all observations in the table
+        function renderObservations() {
+            const table = document.getElementById('observations-table');
+            table.innerHTML = ''; // Clear existing cards
+            observations.forEach((obs, index) => {
+                addToReportTable(obs, index); // Add each observation back with its new index
+            });
+        }
+
 
         // Preview corrective photo (stores file and generates Data URL)
         document.getElementById('corrective-photo-input').addEventListener('change', function(event) {
