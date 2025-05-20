@@ -405,16 +405,25 @@
 
         // --- Local Storage Functions ---
         function saveObservations() {
-            localStorage.setItem('safetyObservations', JSON.stringify(observations));
+            try {
+                localStorage.setItem('safetyObservations', JSON.stringify(observations));
+            } catch (e) {
+                console.error("Error saving to localStorage:", e);
+                alert("Failed to save data. Your browser's storage might be full or restricted.");
+            }
         }
 
         function loadObservations() {
-            const storedObservations = localStorage.getItem('safetyObservations');
-            if (storedObservations) {
-                observations = JSON.parse(storedObservations);
-                // No need to reconstruct File objects here as we only store name/type and Data URL.
-                // The Data URLs are sufficient for display and PDF generation.
-                renderObservations(); // Render observations when loaded
+            try {
+                const storedObservations = localStorage.getItem('safetyObservations');
+                if (storedObservations) {
+                    observations = JSON.parse(storedObservations);
+                    renderObservations(); // Render observations when loaded
+                }
+            } catch (e) {
+                console.error("Error loading from localStorage:", e);
+                alert("Failed to load saved data. Your browser's storage might be corrupted.");
+                observations = []; // Reset observations to prevent further errors
             }
         }
 
@@ -667,11 +676,30 @@
         document.getElementById('hazard-form').addEventListener('submit', function(e) {
             e.preventDefault();
             try {
+                let obsImageFile = null;
+                let obsImageDataUrl = null;
+
+                if (editingIndex !== null) {
+                    // If editing, check if a new photo was uploaded during this edit session.
+                    // If currentPhoto is null, it means no new photo was selected, so retain the existing one.
+                    if (currentPhoto) {
+                        obsImageFile = { name: currentPhoto.name, type: currentPhoto.type };
+                        obsImageDataUrl = currentPhotoDataUrl;
+                    } else {
+                        // No new photo, retain the original image data from the observation being edited
+                        obsImageFile = observations[editingIndex].imageFile;
+                        obsImageDataUrl = observations[editingIndex].imageDataUrl;
+                    }
+                } else {
+                    // New observation, use the current photo if available
+                    obsImageFile = currentPhoto ? { name: currentPhoto.name, type: currentPhoto.type } : null;
+                    obsImageDataUrl = currentPhotoDataUrl;
+                }
+
                 const formData = {
                     timestamp: document.getElementById('observation-date').value || new Date().toISOString(),
-                    // Store only necessary file info (name and type) for initial image
-                    imageFile: currentPhoto ? { name: currentPhoto.name, type: currentPhoto.type } : null,
-                    imageDataUrl: currentPhotoDataUrl, // Store Data URL for PDF embedding
+                    imageFile: obsImageFile,
+                    imageDataUrl: obsImageDataUrl,
                     category: document.getElementById('hazard-category').value || 'N/A',
                     observationType: document.getElementById('observation-type').value || 'N/A', // Capture observation type
                     description: document.getElementById('description').value || 'N/A',
@@ -686,7 +714,7 @@
                 };
 
                 if (editingIndex !== null) {
-                    // If editing, preserve corrective photo info if not re-uploaded
+                    // Preserve corrective photo info from the original observation if not re-uploaded
                     if (observations[editingIndex].correctivePhotoFile) {
                         formData.correctivePhotoFile = observations[editingIndex].correctivePhotoFile;
                         formData.correctivePhotoDataUrl = observations[editingIndex].correctivePhotoDataUrl;
@@ -703,8 +731,8 @@
                 renderObservations(); // Re-render the table to show updated data
                 document.getElementById('hazard-form').reset();
                 document.getElementById('photo-input').value = '';
-                currentPhoto = null;
-                currentPhotoDataUrl = null;
+                currentPhoto = null; // Clear current photo after submission/update
+                currentPhotoDataUrl = null; // Clear current photo data URL
                 document.getElementById('photo-preview').classList.add('hidden');
                 showPage('report-table-page');
 
@@ -773,6 +801,12 @@
             document.getElementById('assign-to').value = obs.assignTo;
             document.getElementById('due-date').value = obs.dueDate;
             document.getElementById('status').value = obs.status;
+
+            // IMPORTANT: Clear currentPhoto and currentPhotoDataUrl when entering edit mode
+            // This prevents accidentally re-using a stale File object if the user doesn't upload a new photo.
+            currentPhoto = null;
+            currentPhotoDataUrl = null;
+            document.getElementById('photo-preview').classList.add('hidden'); // Hide preview if no new photo is selected
 
             showPage('hazard-form-page');
 
