@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Observation Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .btn {
+            min-height: 48px;
+            font-size: 1.125rem;
+            padding: 0.75rem 1.5rem;
+        }
+        .mobile-table-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+        /* New styles for corrective photo modal and interactive cards */
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        .hover\:bg-gray-50:hover {
+            background-color: #f9fafb;
+        }
+        .fixed {
+            position: fixed;
+        }
+        .inset-0 {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+        .bg-opacity-50 {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Status coloring for cards */
+        .status-open {
+            color: red;
+            font-weight: bold;
+        }
+        .status-closed {
+            color: green;
+            font-weight: bold;
+        }
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh; /* Limit height for scrollability */
+            overflow-y: auto; /* Enable scrolling for long forms */
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Top Navbar -->
+    <nav id="main-nav" class="fixed top-0 left-0 w-full bg-white shadow z-50 flex items-center justify-center space-x-6 py-2">
+        <!-- Home Icon -->
+        <button onclick="showPage('report-table-page')" class="group flex flex-col items-center focus:outline-none" title="Home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600 group-hover:text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span class="text-xs text-gray-500 group-hover:text-blue-800">Home</span>
+        </button>
+        <!-- BBS Icon -->
+        <button onclick="window.location.href='bbs_checklist.php'" class="group flex flex-col items-center focus:outline-none" title="BBS Checklist">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-orange-500 group-hover:text-orange-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <rect x="3" y="13" width="4" height="8" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"/>
+                <rect x="9" y="9" width="4" height="12" fill="#0ea5e9" stroke="#0ea5e9" stroke-width="1.5"/>
+                <rect x="15" y="5" width="4" height="16" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"/>
+            </svg>
+            <span class="text-xs text-gray-500 group-hover:text-orange-700">BBS</span>
+        </button>
+        <!-- Start Inspection Icon -->
+        <button onclick="showPage('main-page'); setTimeout(()=>document.getElementById('photo-input').click(), 300);" class="group flex flex-col items-center focus:outline-none" title="Start Inspection">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-500 group-hover:text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke-width="2" stroke="currentColor" fill="none"/>
+                <circle cx="12" cy="12" r="3" stroke-width="2" stroke="currentColor" fill="none"/>
+            </svg>
+            <span class="text-xs text-gray-500 group-hover:text-blue-700">Inspect</span>
+        </button>
+        <!-- Admin Dashboard Icon -->
+        <button onclick="window.location.href='admin.php'" class="group flex flex-col items-center focus:outline-none" title="Admin Dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-600 group-hover:text-purple-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span class="text-xs text-gray-500 group-hover:text-purple-800">Admin</span>
+        </button>
+        <!-- Logout Icon -->
+        <button onclick="logout()" class="group flex flex-col items-center focus:outline-none" title="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-red-500 group-hover:text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
+            </svg>
+            <span class="text-xs text-gray-500 group-hover:text-red-700">Logout</span>
+        </button>
+    </nav>
+    <section id="login-page" class="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all hover:scale-[1.02]">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Safety Observation Report</h1>
+                <p class="text-gray-600">Please login to continue.</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="login-username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="login-username" name="login-username" required
+                           class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-colors"
+                           placeholder="Enter your username">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" name="password" required
+                           class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-colors"
+                           placeholder="Enter your password">
+                </div>
+                <div id="login-error" class="hidden text-red-500 text-sm text-center"></div>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    Sign In
+                </button>
+            </form>
+            <p class="mt-6 text-center text-sm text-gray-600">
+                Don't have an account?
+                <a href="#register-page" class="font-medium text-blue-600 hover:text-blue-800 transition-colors" onclick="showPage('register-page')">
+                    Sign up
+                </a>
+            </p>
+        </div>
+    </section>
+
+    <section id="register-page" class="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-50 hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all hover:scale-[1.02]">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
+                <p class="text-gray-600">Join us to start reporting safety observations.</p>
+            </div>
+            <form id="register-form" class="space-y-6">
+                <div>
+                    <label for="reg-username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="reg-username" name="reg-username" required
+                           class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-colors"
+                           placeholder="Choose a username">
+                </div>
+                <div>
+                    <label for="reg-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="reg-password" name="reg-password" required
+                           class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-colors"
+                           placeholder="Create a password">
+                </div>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    Create Account
+                </button>
+            </form>
+            <p class="mt-6 text-center text-sm text-gray-600">
+                Already have an account?
+                <a href="#login-page" class="font-medium text-blue-600 hover:text-blue-800 transition-colors" onclick="showPage('login-page')">
+                    Back to Login
+                </a>
+            </p>
+        </div>
+    </section>
+
+    <section id="main-page" class="min-h-screen flex flex-col items-center justify-start px-4 py-6 hidden">
+        <h1 class="text-xl font-bold text-center text-gray-800 mb-4">Safety Observation Report</h1>
+        <p class="text-md text-gray-700 mb-6 text-center">Thank you for making your workplace safe!</p>
+            <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden"
+                   onchange="previewPhoto(event)">
+            <div id="photo-preview" class="hidden mb-4">
+                <img id="preview-img" class="w-full h-auto rounded-md shadow-md" alt="Photo Preview">
+                <button onclick="submitPhoto()"
+                        class="w-full bg-green-600 text-white btn rounded-md hover:bg-green-700 mt-2">
+                    Proceed with Photo
+                </button>
+        </div>
+    </section>
+
+    <section id="loading-page" class="min-h-screen flex items-center justify-center px-4 hidden">
+        <p class="text-lg font-semibold text-gray-700">Analyzing image... Please wait.</p>
+    </section>
+
+    <section id="bytix-list-page" class="min-h-screen flex flex-col items-center justify-start px-4 py-6 hidden">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Select Hazard Category</h2>
+        <div class="w-full max-w-sm space-y-3">
+            <button onclick="showHazardForm('physical')"
+                    class="w-full bg-gray-200 text-gray-800 btn rounded-md hover:bg-gray-300">
+                Physical Hazard
+            </button>
+            <button onclick="showHazardForm('chemical')"
+                    class="w-full bg-gray-200 text-gray-800 btn rounded-md hover:bg-gray-300">
+                Chemical Hazard
+            </button>
+            <button onclick="showHazardForm('biological')"
+                    class="w-full bg-gray-200 text-gray-800 btn rounded-md hover:bg-gray-300">
+                Biological Hazard
+            </button>
+            <button onclick="showHazardForm('mechanical')"
+                    class="w-full bg-gray-200 text-gray-800 btn rounded-md hover:bg-gray-300">
+                Mechanical Hazard
+            </button>
+            <button onclick="showHazardForm('ergonomical')"
+                    class="w-full bg-gray-200 text-gray-800 btn rounded-md hover:bg-gray-300">
+                Ergonomical Hazard
+            </button>
+            <button onclick="showHazardForm('electrical')"
+                    class="w-full bg-gray-200 text-gray-800 btn rounded-md hover:bg-gray-300">
+                Electrical Hazard
+            </button>
+        </div>
+        <button onclick="showPage('main-page')"
+                class="mt-4 bg-gray-500 text-white btn rounded-md hover:bg-gray-600">
+            Back
+        </button>
+    </section>
+
+    <section id="hazard-form-page" class="min-h-screen flex flex-col items-center justify-start px-4 py-6 hidden">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Hazard Assessment</h2>
+        <form id="hazard-form" class="w-full max-w-sm space-y-4">
+            <div>
+                <label for="observation-date" class="block text-sm font-medium text-gray-700">Observation Date/Time:</label>
+                <input type="datetime-local" id="observation-date" name="observation-date" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base">
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label for="hazard-category" class="block text-sm font-medium text-gray-700">Hazard Category:</label>
+                    <select id="hazard-category" name="hazard-category" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base">
+                        <option value="">Select Category</option>
+                        <option value="physical">Physical Hazard</option>
+                        <option value="chemical">Chemical Hazard</option>
+                        <option value="biological">Biological Hazard</option>
+                        <option value="mechanical">Mechanical Hazard</option>
+                        <option value="ergonomical">Ergonomical Hazard</option>
+                        <option value="electrical">Electrical Hazard</option>
+                    </select>
+                </div>
+                 <div class="flex-1">
+                    <label for="observation-type" class="block text-sm font-medium text-gray-700">Type of Observation:</label>
+                    <select id="observation-type" name="observation-type" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base">
+                        <option value="">Select Type</option>
+                        <option value="Unsafe Condition">Unsafe Condition</option>
+                        <option value="Unsafe Act">Unsafe Act</option>
+                    </select>
+                 </div>
+            </div>
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700">Description:</label>
+                <select id="description-select" onchange="updateDescription()"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base mb-2">
+                    <option value="">Select a predefined description</option>
+                    <optgroup label="Storage and Material Observations">
+                            <option value="Materials/FG are at immediate risk of collapse, posing severe safety hazards (e.g., leaning stacks with no securing measures).">Leaning stacks</option>
+                            <option value="Materials/FG are unstable but not immediately hazardous, requiring prompt correction (e.g., loose strapping or uneven stacking).">Loose strapping or uneven stacking</option>
+                            <option value="Minor instability observed,slight tilting of pallets).">slight tilting of pallets</option>
+                        </optgroup>
+                        <optgroup label="Storage Area Safety and Accessibility">
+                            <option value="Damaged racking and significant congestion block safe access, requiring immediate intervention.">Damaged racking</option>
+                            <option value="Some areas are accessible, but damaged racking or partial congestion creates risks.">Congestion creates risks</option>
+                            <option value="Minor congestion present, but access is not severely restricted.">Minor congestion present</option>
+                        </optgroup>
+                        <optgroup label="Pallet Condition">
+                            <option value="Pallets have broken boards, contamination (e.g., oil, chemicals), or structural damage, unfit for use.">Pallets have broken boards</option>
+                            <option value="Pallets minor cracks, dirt, .">Pallet with minor cracks</option>
+                            <option value="Pallets show early signs of wear or minor contamination.">Pallet minor contamination</option>
+                        </optgroup>
+                        <optgroup label="Pallet Pest Infestation">
+                            <option value="Severe Infestation: Clear evidence of active pests (e.g., rodents, insects) requiring immediate pest control.">Severe Infestation</option>
+                            <option value="Moderate Infestation: Signs of pest activity (e.g., droppings, nesting) but not widespread.">Moderate Infestation</option>
+                            <option value="Minor Infestation: Minimal signs of pests, manageable with routine cleaning.">Minor Infestation</option>
+                        </optgroup>
+                        <optgroup label="Finished Goods Condition">
+                            <option value="Damaged: FG show significant damage (e.g., dents, torn packaging), unfit for sale or use.">Damaged FG</option>
+                        </optgroup>
+                    </optgroup>
+                    <optgroup label="Workplace and Welfare Facility Observations">
+                        <optgroup label="Work Area/Welfare Facility Condition">
+                            <option value="cluttered workplace.">cluttered workplace</option>
+                        </optgroup>
+                        <optgroup label="Floor, Walls, Ceiling, and Roofing Condition">
+                            <option value="Floor surfaces are uneven and damaged in several areas. Walls and ceilings show signs of wear, including cracks and peeling paint, and roofing has visible leaks and deterioration..">Floor, Walls, Ceiling, and Roofing Condition</option>
+                        </optgroup>
+                        <optgroup label="Extension Cords and Outlets">
+                            <option value="Hazardous: Frayed wires, exposed conductors, or damaged outlets pose immediate risks.">Frayed wires, exposed conductors, or damaged outlets</option>
+                        </optgroup>
+                        <optgroup label="Operation Area Congestion">
+                            <option value="Severely Congested: Significant obstructions prevent safe MHE operation.">Severely Congested</option>
+                            <option value="Moderately Congested: Partial obstructions hinder efficient movement.">Moderately Congested</option>
+                            <option value="Minor Congestion: Slight clutter, manageable with minor adjustments.">Minor Congestion</option>
+                            <option value="Clear: No congestion observed.">Clear</option>
+                        </optgroup>
+                        <optgroup label="Operation Area Demarcation">
+                            <option value="No Demarcation: No signage or markings, leading to confusion and congestion.">No Demarcation</option>
+                            <option value="Inadequate Demarcation: Faded or incomplete markings, partially effective.">Inadequate Demarcation</option>
+                            <option value="Needs Improvement: Markings present but require enhancement for clarity.">Needs Improvement Markings present but require enhancement for clarity</option>
+                        </optgroup>
+                        <optgroup label="Lighting Levels">
+                            <option value="Inadequate: Dim or flickering lights impair visibility and safety.">Inadequate</option>
+                            <option value="Partially Adequate: Lighting is uneven, affecting some areas.">Partially Adequate</option>
+                        </optgroup>
+                    </optgroup>
+                    <optgroup label="Personal Protective Equipment (PPE) Observations">
+                        <optgroup label="PPE Usage">
+                            <option value="Non-Compliant: Workers frequently neglect PPE, posing safety risks.">Non-Compliant</option>
+                        </optgroup>
+                        <optgroup label="Workplace Signage">
+                            <option value="No Signage: No warning signs, leading to non-compliance.">No Signage</option>
+                            <option value="Inadequate Signage: Signs are faded, obstructed, or insufficient.">Inadequate Signage</option>
+                            <option value="Needs Improvement: Signage present but not fully clear or visible.">Needs Improvement</option>
+                        </optgroup>
+                    </optgroup>
+                    <optgroup label="Fire Safety and Emergency Exit Observations">
+                        <option value="Inaccessible: Extinguishers are blocked or improperly mounted, hindering use.">Inaccessible</option>
+                        <option value="Needs Adjustment: Minor mounting or placement issues observed.">Needs Adjustment</option>
+                        <option value="Inoperable: Extinguishers are expired, uncharged, or damaged.">Inoperable</option>
+                    </optgroup>
+                        <optgroup label="Exit Markings and Obstructions">
+                            <option value="Obstructed/Unmarked: Exits are blocked or lack visible signage.">Obstructed</option>
+                            <option value="Partially Clear: Some exits are obstructed or have faded signage.">Partially Clear</option>
+                            <option value="Minor obstructions or signage issues observed.">Minor obstructions or signage observed</option>
+                        </optgroup>
+                        <optgroup label="Emergency Lighting for Exits">
+                            <option value="broken emergency lighting in exit routes.">broken emergency lighting in exit routes</option>
+                            <option value="Partially Functional: Some lighting is missing or malfunctioning.">Partially Functional</option>
+                            <option value="Needs Maintenance: Lighting is present but requires minor repairs.">Needs Maintenance</option>
+                            <option value="Fully Functional: Emergency lighting is fully operational.">Fully Functional</option>
+                        </optgroup>
+                    </optgroup>
+                </select>
+                <textarea id="description" name="description" required
+                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base"></textarea>
+            </div>
+
+            <div class="mt-4">
+                <label for="corrective-actions" class="block text-sm font-medium text-gray-700">Corrective Actions:</label>
+                <textarea id="corrective-actions" name="corrective-actions"
+                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base"></textarea>
+            </div>
+
+            <div class="mt-4">
+                <label for="preventive-actions" class="block text-sm font-medium text-gray-700">Preventive Actions:</label>
+                <textarea id="preventive-actions" name="preventive-actions"
+                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base"></textarea>
+            </div>
+
+            <div>
+                <label for="location" class="block text-sm font-medium text-gray-700">Location:</label>
+                <select id="location" name="location" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base">
+                    <option value="">Select Location</option>
+                    <option value="MPP">MPP</option>
+                    <option value="CMP">CMP</option>
+                    <option value="DC INB">DC INB</option>
+                    <option value="DC OUTB">DC OUTB</option>
+                    <option value="VAS">VAS</option>
+                    <option value="RM">RM</option>
+                </select>
+            </div>
+            <div>
+                <label for="assign-to" class="block text-sm font-medium text-gray-700">Assign To:</label>
+                <input type="text" id="assign-to" name="assign-to" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base">
+            </div>
+            <div>
+                <label for="due-date" class="block text-sm font-medium text-gray-700">Due Date:</label>
+                <input type="date" id="due-date" name="due-date" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base">
+            </div>
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700">Status:</label>
+                <select id="status" name="status" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-base">
+                    <option value="Open">Open</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+            <button type="submit"
+                    class="w-full bg-blue-600 text-white btn rounded-md hover:bg-blue-700 flex items-center justify-center gap-2">
+                <span id="hazard-submit-text">Submit Report</span>
+                <span id="hazard-submit-spinner" class="hidden"><svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg></span>
+            </button>
+        </form>
+    </section>
+
+    <section id="report-table-page" class="min-h-screen h-full flex flex-col items-center justify-start px-4 py-6 overflow-y-auto">
+        <!-- Summary and Filters Container -->
+        <div class="w-full max-w-4xl mb-6 flex flex-col md:flex-row gap-4">
+            <!-- Summary Card -->
+            <div class="flex-1 bg-white rounded-lg shadow-md p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Report Summary</h3>
+                    <button onclick="generatePDF()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export PDF
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Total Observations -->
+                    <div class="bg-blue-50 p-3 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                        <p class="text-sm text-gray-600">Total Observations</p>
+                        <p id="summary-total" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                    <!-- Open Observations -->
+                    <div class="bg-red-50 p-3 rounded-lg hover:bg-red-100 transition-colors duration-200">
+                        <p class="text-sm text-gray-600">Open</p>
+                        <p id="summary-open" class="text-2xl font-bold text-red-600">0</p>
+                    </div>
+                    <!-- Closed Observations -->
+                    <div class="bg-green-50 p-3 rounded-lg hover:bg-green-100 transition-colors duration-200">
+                        <p class="text-sm text-gray-600">Closed</p>
+                        <p id="summary-closed" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <!-- Closure Rate -->
+                    <div class="bg-purple-50 p-3 rounded-lg hover:bg-purple-100 transition-colors duration-200">
+                        <p class="text-sm text-gray-600">Closure Rate</p>
+                        <p id="summary-closure-rate" class="text-2xl font-bold text-purple-600">0%</p>
+                    </div>
+                    <!-- Unsafe Acts -->
+                    <div class="bg-orange-50 p-3 rounded-lg hover:bg-orange-100 transition-colors duration-200">
+                        <p class="text-sm text-gray-600">Unsafe Acts</p>
+                        <p id="summary-unsafe-acts" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                    <!-- Unsafe Conditions -->
+                    <div class="bg-yellow-50 p-3 rounded-lg hover:bg-yellow-100 transition-colors duration-200">
+                        <p class="text-sm text-gray-600">Unsafe Conditions</p>
+                        <p id="summary-unsafe-conditions" class="text-2xl font-bold text-yellow-600">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section (replace with SOR_Report style) -->
+            <div class="flex-1 bg-white rounded-lg shadow-md p-4">
+                <div class="flex flex-wrap gap-4 mb-4 items-end">
+                    <select id="filter-category" class="input-field">
+                        <option value="">All Categories</option>
+                        <option value="physical">Physical Hazard</option>
+                        <option value="chemical">Chemical Hazard</option>
+                        <option value="biological">Biological Hazard</option>
+                        <option value="mechanical">Mechanical Hazard</option>
+                        <option value="ergonomical">Ergonomical Hazard</option>
+                        <option value="electrical">Electrical Hazard</option>
+                    </select>
+                    <select id="filter-observation-type" class="input-field">
+                        <option value="">All Types</option>
+                        <option value="Unsafe Condition">Unsafe Condition</option>
+                        <option value="Unsafe Act">Unsafe Act</option>
+                    </select>
+                    <select id="filter-location" class="input-field min-w-[160px]">
+                        <option value="">All Locations</option>
+                        <!-- Locations will be populated dynamically -->
+                    </select>
+                    <select id="filter-status" class="input-field">
+                        <option value="">All Status</option>
+                        <option value="Open">Open</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                    <div class="flex space-x-2">
+                        <input type="text" id="date-range" placeholder="Select date range" class="input-field">
+                        <input type="hidden" id="filter-start-date">
+                        <input type="hidden" id="filter-end-date">
+                    </div>
+                    <div class="flex-1"></div>
+                    <div class="flex gap-2 justify-end">
+                        <button onclick="applyFilters()" class="btn-primary px-5 py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition">Apply Filters</button>
+                        <button onclick="clearFilters()" class="btn-secondary px-5 py-2 rounded-lg font-semibold shadow hover:bg-gray-300 transition">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observation Cards Container -->
+        <div id="observation-card-container" class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        <div id="infinite-scroll-status" class="w-full max-w-4xl flex flex-col items-center mt-2"></div>
+        
+        <!-- Image Modal -->
+        <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+            <div class="relative bg-white rounded-lg shadow-lg p-2">
+                <img id="modal-img" src="" alt="Preview" class="max-w-xs max-h-[70vh] rounded" />
+                <button onclick="closeImageModal()" class="absolute top-2 right-2 bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-600">&times;</button>
+            </div>
+        </div>
+
+        <!-- Add pagination controls -->
+        <div class="w-full max-w-4xl flex justify-between items-center mt-4 bg-white rounded-lg shadow p-4">
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+                <span class="text-sm text-gray-600">(<span id="total-items">0</span> total)</span>
+            </div>
+            <div class="flex space-x-2">
+                <button id="prev-page" onclick="changePage('prev')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Previous
+                </button>
+                <button id="next-page" onclick="changePage('next')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div id="corrective-photo-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4">Upload Corrective Action Photo</h3>
+            <input type="file" id="corrective-photo-input" accept="image/*" capture="environment" class="mb-4 w-full">
+            <div id="corrective-photo-preview" class="hidden mb-4">
+                <img id="corrective-preview-img" class="w-full h-auto rounded-md shadow-md" alt="Corrective Photo Preview">
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="submitCorrectivePhoto()" class="flex-1 bg-green-600 text-white btn rounded-md hover:bg-green-700">
+                    Submit
+                </button>
+                <button onclick="closeCorrectivePhotoModal()" class="flex-1 bg-gray-500 text-white btn rounded-md hover:bg-gray-600">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Message</h3>
+            <p id="message-text" class="mb-6"></p>
+            <div class="flex justify-end">
+                <button onclick="closeMessageModal()" class="bg-blue-600 text-white btn rounded-md hover:bg-blue-700">
+                    OK
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirm Delete</h3>
+            <p class="mb-6 text-gray-600">Are you sure you want to delete this observation report? This action cannot be undone.</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add a container for active filter cards above the report cards -->
+    <div id="active-filter-cards" class="flex flex-wrap gap-2 mb-4"></div>
+
+    <script>
+        let loggedInUser = null;
+
+        // Check for existing session on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUsername = localStorage.getItem('username');
+            if (savedUsername) {
+                checkLoginStatus();
+            }
+            renderActiveFilterCards();
+            fetchAndPopulateFilterOptions();
+        });
+
+        // Enhanced session check function
+        async function checkLoginStatus() {
+            try {
+                const formData = new FormData();
+                formData.append('action', 'check_session');
+                
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success && result.loggedin) {
+                    loggedInUser = result.username || localStorage.getItem('username');
+                    const usernameElement = document.getElementById('current-username');
+                    if (usernameElement) {
+                        usernameElement.textContent = loggedInUser;
+                    }
+                    showPage('report-table-page');
+                    return true;
+                } else {
+                    localStorage.removeItem('username');
+                    showPage('login-page');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                localStorage.removeItem('username');
+                showPage('login-page');
+                return false;
+            }
+        }
+
+        // Login form submission
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'login');
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    loggedInUser = username;
+                    localStorage.setItem('username', username);
+                    const usernameElement = document.getElementById('current-username');
+                    if (usernameElement) {
+                        usernameElement.textContent = username;
+                    }
+                    showPage('report-table-page');
+                    showNotification('Login successful', 'success');
+                } else {
+                    showNotification(result.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Login failed. Please try again.', 'error');
+            }
+        });
+
+        // Register form submission (username and password only required)
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+
+            if (!username || !password) {
+                showNotification('Username and password are required', 'error');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'register');
+                formData.append('username', username);
+                formData.append('password', password);
+
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(result.message || 'Registration successful! Please login.', 'success');
+                    showPage('login-page');
+                } else {
+                    showNotification(result.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error during registration:', error);
+                showNotification('Registration failed. Please try again.', 'error');
+            }
+        });
+
+        // Enhanced logout function
+        async function logout() {
+            try {
+                const formData = new FormData();
+                formData.append('action', 'logout');
+                
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    loggedInUser = null;
+                    localStorage.removeItem('username');
+                    observations = [];
+                    currentObservationIndex = 0;
+                    currentPhoto = null;
+                    currentPhotoDataUrl = null;
+                    
+                    showPage('login-page');
+                    showNotification('Logged out successfully', 'success');
+                } else {
+                    showNotification('Logout failed: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                showNotification('Error during logout. Please try again.', 'error');
+            }
+        }
+
+        // Function to check session before sensitive operations
+        async function checkSessionBeforeAction() {
+            if (!loggedInUser) {
+                return false;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'check_session');
+                
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (!result.success || !result.loggedin) {
+                    showNotification('Session expired. Please log in again.', 'error');
+                    localStorage.removeItem('username');
+                    showPage('login-page');
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Error checking session:', error);
+                showNotification('Error checking session. Please log in again.', 'error');
+                localStorage.removeItem('username');
+                showPage('login-page');
+                return false;
+            }
+        }
+
+        // Function to show pages with session check
+        function showPage(pageId) {
+            // Hide all sections first
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Check if user is trying to access protected pages without being logged in
+            if (pageId !== 'login-page' && pageId !== 'register-page' && !loggedInUser) {
+                showPage('login-page');
+                showNotification('Please login to access this page', 'error');
+                return;
+            }
+
+            // Show the requested page
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            // Show/hide header based on page
+            const mainNav = document.getElementById('main-nav');
+            if (pageId === 'login-page' || pageId === 'register-page') {
+                mainNav.classList.add('hidden');
+                document.body.classList.remove('pt-20');
+            } else {
+                mainNav.classList.remove('hidden');
+                document.body.classList.add('pt-20');
+            }
+            
+            if (pageId === 'hazard-form-page') {
+                setCurrentDateTime();
+            } else if (pageId === 'main-page' || pageId === 'report-table-page') {
+                loadObservations();
+            }
+        }
+
+        // Global variables
+        let currentPhoto = null; // Stores the initial photo file object
+        let currentPhotoDataUrl = null; // Stores the initial photo as Data URL
+        let observations = []; // Will store observations fetched from the API
+        let currentObservationIndex = 0; // Tracks the currently displayed observation card
+        let selectedObservationIdForCorrective = null; // Stores the ID of the observation for which corrective photo is being uploaded
+        let currentCorrectivePhotoFile = null; // Stores the corrective photo file object
+        let currentPage = 1; // Pagination current page
+        const itemsPerPage = 16; // Number of items per page
+
+        // Function to set the current date and time in the datetime-local input
+        function setCurrentDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('observation-date').value = formattedDateTime;
+        }
+
+        // Update description and actions when a predefined option is selected
+        function updateDescription() {
+            const select = document.getElementById('description-select');
+            const textarea = document.getElementById('description');
+            const correctiveActions = document.getElementById('corrective-actions');
+            const preventiveActions = document.getElementById('preventive-actions');
+
+            if (select.value) {
+                textarea.value = select.value;
+                // Get the selected option's text (without the value)
+                const selectedOption = select.options[select.selectedIndex].text;
+                // Set corrective and preventive actions based on the selection
+                const actions = getActionsForObservation(selectedOption);
+                correctiveActions.value = actions.corrective;
+                preventiveActions.value = actions.preventive;
+            }
+        }
+
+        // Map observations to their corrective and preventive actions
+        function getActionsForObservation(observation) {
+            const actionMap = {
+                // Storage and Material Observations
+                "Leaning stacks": { corrective: "Restrict access to unstable storage areas and post warning signs.\nRe-stack leaning materials/FG and secure with straps or shrink wrap.\nConduct an immediate inspection to stabilize other at-risk stacks.", preventive: "Develop an SOP for proper stacking and securing of materials/FG.\nTrain staff on safe stacking techniques and load limits.\nSchedule weekly stability checks as part of routine inspections." },
+                "Loose strapping or uneven stacking": { corrective: "Adjust slightly tilted pallets to stable positions.\nMonitor affected stacks for any changes.", preventive: "Include stability checks in daily routine inspections.\nTrain staff to recognize early signs of instability." },
+                "slight tilting of pallets": { corrective: "Adjust slightly tilted pallets to stable positions.\nMonitor affected stacks for any changes.", preventive: "Include stability checks in daily routine inspections.\nTrain staff to recognize early signs of instability." },
+                "Damaged racking": { corrective: "Isolate damaged racking areas with immediate access restrictions.\nImplement temporary support structures if necessary.\nSchedule professional racking repair or replacement.\nClear all congestion to ensure unimpeded access.", preventive: "Conduct daily visual inspections of racking for damage.\nEstablish clear traffic lanes and enforce strict no-storage zones in access ways.\nTrain MHE operators on safe operating clearances and reporting procedures for damage." },
+                "Congestion creates risks": { corrective: "Relocate obstructing materials and equipment immediately.\nImplement temporary support structures if necessary.\nSchedule professional racking repair or replacement.\nClear all congestion to ensure unimpeded access.", preventive: "Conduct daily visual inspections of racking for damage.\nEstablish clear traffic lanes and enforce strict no-storage zones in access ways.\nTrain MHE operators on safe operating clearances and reporting procedures for damage." },
+                "Minor congestion present": { corrective: "Relocate obstructing materials and equipment immediately.\nImplement temporary support structures if necessary.\nSchedule professional racking repair or replacement.\nClear all congestion to ensure unimpeded access.", preventive: "Conduct daily visual inspections of racking for damage.\nEstablish clear traffic lanes and enforce strict no-storage zones in access ways.\nTrain MHE operators on safe operating clearances and reporting procedures for damage." },
+                "Pallets have broken boards": { corrective: "Remove damaged pallets from circulation immediately; do not reuse.\nQuarantine all damaged pallets in a designated area for disposal or repair.\nInspect goods on damaged pallets for any damage and transfer to compliant pallets.", preventive: "Implement a routine pallet inspection program upon receipt and before reuse.\nTrain staff on identifying damaged pallets and proper handling procedures.\nSource higher-quality, durable pallets if current ones are consistently failing." },
+                "Pallet with minor cracks": { corrective: "Remove damaged pallets from circulation immediately; do not reuse.\nQuarantine all damaged pallets in a designated area for disposal or repair.\nInspect goods on damaged pallets for any damage and transfer to compliant pallets.", preventive: "Implement a routine pallet inspection program upon receipt and before reuse.\nTrain staff on identifying damaged pallets and proper handling procedures.\nSource higher-quality, durable pallets if current ones are consistently failing." },
+                "Pallet minor contamination": { corrective: "Remove damaged pallets from circulation immediately; do not reuse.\nQuarantine all damaged pallets in a designated area for disposal or repair.\nInspect goods on damaged pallets for any damage and transfer to compliant pallets.", preventive: "Implement a routine pallet inspection program upon receipt and before reuse.\nTrain staff on identifying damaged pallets and proper handling procedures.\nSource higher-quality, durable pallets if current ones are consistently failing." },
+                "Severe Infestation": { corrective: "Immediately quarantine infested pallets/areas.\nEngage professional pest control services for eradication.\nThoroughly clean and sanitize affected areas post-treatment.", preventive: "Implement a robust pest management program with regular inspections.\nSeal entry points and eliminate food/water sources attractive to pests.\nEducate staff on early signs of infestation and reporting protocols." },
+                "Moderate Infestation": { corrective: "Immediately quarantine infested pallets/areas.\nEngage professional pest control services for eradication.\nThoroughly clean and sanitize affected areas post-treatment.", preventive: "Implement a robust pest management program with regular inspections.\nSeal entry points and eliminate food/water sources attractive to pests.\nEducate staff on early signs of infestation and reporting protocols." },
+                "Minor Infestation": { corrective: "Immediately quarantine infested pallets/areas.\nEngage professional pest control services for eradication.\nThoroughly clean and sanitize affected areas post-treatment.", preventive: "Implement a robust pest management program with regular inspections.\nSeal entry points and eliminate food/water sources attractive to pests.\nEducate staff on early signs of infestation and reporting protocols." },
+                "Damaged FG": { corrective: "Segregate damaged finished goods immediately to a designated reject area.\nAssess the extent of damage and determine if salvageable, re-workable, or for disposal.\nDocument damaged goods for inventory and quality control purposes.", preventive: "Review material handling procedures and equipment for potential causes of damage.\nImprove packaging and storage methods to better protect finished goods.\nConduct regular training for staff on careful handling of finished goods." },
+                // Workplace and Welfare Facility Observations
+                "cluttered workplace": { corrective: "Implement an immediate 5S cleanup initiative in the affected area.\nAssign clear responsibilities for maintaining cleanliness and organization.\nProvide necessary tools and storage solutions to reduce clutter.", preventive: "Establish daily 5S routines (Sort, Set in Order, Shine, Standardize, Sustain).\nConduct regular audits of the workplace to ensure adherence to 5S principles.\nProvide adequate tools and storage solutions to prevent clutter accumulation." },
+                "Floor, Walls, Ceiling, and Roofing Condition": { corrective: "Immediately barricade and mark unsafe floor areas for repair.\nSchedule repairs for cracks and peeling paint on walls and ceilings.\nArrange for urgent repair of visible roof leaks to prevent further damage and hazards.", preventive: "Implement a routine facility inspection schedule to identify and address minor damages proactively.\nEstablish a maintenance log for tracking repairs and preventative actions.\nConsider using more durable materials for high-traffic or prone-to-damage areas." },
+                "Frayed wires, exposed conductors, or damaged outlets": { corrective: "Immediately de-energize and tag out affected circuits or equipment.\nReplace all frayed wires, exposed conductors, and damaged outlets with compliant components.\nConduct a comprehensive electrical inspection of the area by a qualified electrician.", preventive: "Implement a routine electrical equipment inspection and maintenance program.\nProvide proper training on electrical safety and hazard recognition for all employees.\nEnsure appropriate use of extension cords, avoiding overloading and improper routing." },
+                "Severely Congested": { corrective: "Immediately clear main aisles and critical operational zones.\nImplement a temporary traffic flow management plan.\nReorganize storage layouts to improve flow and reduce bottlenecks.", preventive: "Conduct regular audits of the operation area to ensure clear pathways.\nOptimize material flow and storage to prevent congestion build-up.\nTrain and enforce strict adherence to marked pathways and storage limits." },
+                "Moderately Congested": { corrective: "Immediately clear main aisles and critical operational zones.\nImplement a temporary traffic flow management plan.\nReorganize storage layouts to improve flow and reduce bottlenecks.", preventive: "Conduct regular audits of the operation area to ensure clear pathways.\nOptimize material flow and storage to prevent congestion build-up.\nTrain and enforce strict adherence to marked pathways and storage limits." },
+                "Minor Congestion": { corrective: "Immediately clear main aisles and critical operational zones.\nImplement a temporary traffic flow management plan.\nReorganize storage layouts to improve flow and reduce bottlenecks.", preventive: "Conduct regular audits of the operation area to ensure clear pathways.\nOptimize material flow and storage to prevent congestion build-up.\nTrain and enforce strict adherence to marked pathways and storage limits." },
+                "Clear": { corrective: "No congestion observed. No immediate corrective actions are required.", preventive: "Continue regular audits of the operation area to maintain clear pathways.\nReinforce best practices for material handling and storage among staff.\nReview layout periodically for efficiency and potential future congestion points." },
+                "No Demarcation": { corrective: "Immediately implement temporary signage and floor markings.\nDevelop a comprehensive plan for permanent demarcation of walkways, storage zones, and equipment areas.\nCommunicate new layout and rules to all personnel.", preventive: "Establish clear, standardized demarcation guidelines for all operational areas.\nConduct regular inspections to ensure markings are visible and respected.\nTrain staff on the importance of demarcation for safety and efficiency." },
+                "Inadequate Demarcation": { corrective: "Immediately implement temporary signage and floor markings.\nDevelop a comprehensive plan for permanent demarcation of walkways, storage zones, and equipment areas.\nCommunicate new layout and rules to all personnel.", preventive: "Establish clear, standardized demarcation guidelines for all operational areas.\nConduct regular inspections to ensure markings are visible and respected.\nTrain staff on the importance of demarcation for safety and efficiency." },
+                "Needs Improvement Markings present but require enhancement for clarity": { corrective: "Immediately implement temporary signage and floor markings.\nDevelop a comprehensive plan for permanent demarcation of walkways, storage zones, and equipment areas.\nCommunicate new layout and rules to all personnel.", preventive: "Establish clear, standardized demarcation guidelines for all operational areas.\nConduct regular inspections to ensure markings are visible and respected.\nTrain staff on the importance of demarcation for safety and efficiency." },
+                "Inadequate": { corrective: "Install additional temporary lighting in dimly lit areas.\nSchedule maintenance for flickering or faulty lights.\nEvaluate the current lighting system and plan for upgrades to meet safety standards.", preventive: "Conduct regular lighting level assessments to ensure adequate illumination.\nImplement a schedule for routine maintenance and replacement of lighting fixtures.\nEducate staff on the importance of proper lighting for safety and productivity." },
+                "Partially Adequate": { corrective: "Install additional temporary lighting in dimly lit areas.\nSchedule maintenance for flickering or faulty lights.\nEvaluate the current lighting system and plan for upgrades to meet safety standards.", preventive: "Conduct regular lighting level assessments to ensure adequate illumination.\nImplement a schedule for routine maintenance and replacement of lighting fixtures.\nEducate staff on the importance of proper lighting for safety and productivity." },
+                // Personal Protective Equipment (PPE) Observations
+                "Non-Compliant": { corrective: "Immediately intervene and correct workers not wearing required PPE; provide on-the-spot retraining.\nConduct a mandatory refresher training on PPE requirements and importance.\nEnsure all necessary PPE is readily available and in good condition.", preventive: "Regularly review and update PPE policies based on hazard assessments.\nImplement a robust PPE training program for all new and existing employees.\nConduct frequent, unannounced PPE compliance checks and enforce disciplinary actions for non-compliance." },
+                "No Signage": { corrective: "Immediately post temporary warning signs in areas requiring PPE.\nOrder and install permanent, clearly visible PPE signage at all entry points and hazard zones.\nCommunicate PPE requirements to all personnel through meetings and notices.", preventive: "Conduct a site-wide assessment to identify all areas requiring specific PPE signage.\nDevelop a standardized system for signage placement and maintenance.\nIntegrate signage awareness into safety training programs." },
+                "Inadequate Signage": { corrective: "Immediately post temporary warning signs in areas requiring PPE.\nOrder and install permanent, clearly visible PPE signage at all entry points and hazard zones.\nCommunicate PPE requirements to all personnel through meetings and notices.", preventive: "Conduct a site-wide assessment to identify all areas requiring specific PPE signage.\nDevelop a standardized system for signage placement and maintenance.\nIntegrate signage awareness into safety training programs." },
+                "Needs Improvement": { corrective: "Immediately post temporary warning signs in areas requiring PPE.\nOrder and install permanent, clearly visible PPE signage at all entry points and hazard zones.\nCommunicate PPE requirements to all personnel through meetings and notices.", preventive: "Conduct a site-wide assessment to identify all areas requiring specific PPE signage.\nDevelop a standardized system for signage placement and maintenance.\nIntegrate signage awareness into safety training programs." },
+                // Fire Safety and Emergency Exit Observations
+                "Inaccessible": { corrective: "Immediately clear all obstructions around fire extinguishers and emergency exits.\nReposition improperly mounted extinguishers to accessible, visible locations.\nConduct an immediate walk-through to ensure all emergency equipment and exits are fully accessible.", preventive: "Establish and enforce strict policies against blocking fire safety equipment and exit routes.\nConduct regular drills and inspections to ensure quick access to extinguishers and clear exit paths.\nInstall clear, permanent signage for all fire extinguishers and emergency exits." },
+                "Needs Adjustment": { corrective: "Immediately clear all obstructions around fire extinguishers and emergency exits.\nReposition improperly mounted extinguishers to accessible, visible locations.\nConduct an immediate walk-through to ensure all emergency equipment and exits are fully accessible.", preventive: "Establish and enforce strict policies against blocking fire safety equipment and exit routes.\nConduct regular drills and inspections to ensure quick access to extinguishers and clear exit paths.\nInstall clear, permanent signage for all fire extinguishers and emergency exits." },
+                "Inoperable": { corrective: "Immediately replace or recharge expired/damaged fire extinguishers; tag out inoperable units.\nEnsure all fire extinguishers are correctly mounted and easily accessible.\nSchedule immediate inspection by certified fire safety personnel for all extinguishers.", preventive: "Implement a robust monthly inspection program for all fire extinguishers, checking pressure, tags, and physical condition.\nEstablish a clear system for tracking expiration dates and scheduling timely replacements or servicing.\nTrain employees on basic fire extinguisher operation and emergency procedures." },
+                "Obstructed": { corrective: "Immediately remove all obstructions from emergency exits and pathways.\nRestore or install clear, visible exit signage and emergency lighting.\nConduct a review of the area to identify and rectify any other potential hindrances to evacuation.", preventive: "Implement a 'clear zone' policy around all emergency exits and pathways, enforced by regular audits.\nConduct emergency exit drills to ensure all personnel are aware of and use clear routes.\nEnsure regular maintenance and testing of exit lighting and signage." },
+                "Partially Clear": { corrective: "Immediately remove all obstructions from emergency exits and pathways.\nRestore or install clear, visible exit signage and emergency lighting.\nConduct a review of the area to identify and rectify any other potential hindrances to evacuation.", preventive: "Implement a 'clear zone' policy around all emergency exits and pathways, enforced by regular audits.\nConduct emergency exit drills to ensure all personnel are aware of and use clear routes.\nEnsure regular maintenance and testing of exit lighting and signage." },
+                "Minor obstructions or signage issues observed.": { corrective: "Immediately remove all obstructions from emergency exits and pathways.\nRestore or install clear, visible exit signage and emergency lighting.\nConduct a review of the area to identify and rectify any other potential hindrances to evacuation.", preventive: "Implement a 'clear zone' policy around all emergency exits and pathways, enforced by regular audits.\nConduct emergency exit drills to ensure all personnel are aware of and use clear routes.\nEnsure regular maintenance and testing of exit lighting and signage." },
+                "broken emergency lighting in exit routes": { corrective: "Immediately repair or replace all broken emergency lighting units in exit routes.\nConduct a full inspection of the emergency lighting system to identify other potential failures.\nEnsure proper battery backup and regular testing of emergency lights.", preventive: "Implement a routine monthly inspection and testing schedule for all emergency lighting.\nKeep spare emergency lighting units and batteries on hand for quick replacement.\nTrain maintenance staff on proper emergency lighting system upkeep." },
+                "Partially Functional": { corrective: "Immediately repair or replace all broken emergency lighting units in exit routes.\nConduct a full inspection of the emergency lighting system to identify other potential failures.\nEnsure proper battery backup and regular testing of emergency lights.", preventive: "Implement a routine monthly inspection and testing schedule for all emergency lighting.\nKeep spare emergency lighting units and batteries on hand for quick replacement.\nTrain maintenance staff on proper emergency lighting system upkeep." },
+                "Needs Maintenance": { corrective: "Immediately repair or replace all broken emergency lighting units in exit routes.\nConduct a full inspection of the emergency lighting system to identify other potential failures.\nEnsure proper battery backup and regular testing of emergency lights.", preventive: "Implement a routine monthly inspection and testing schedule for all emergency lighting.\nKeep spare emergency lighting units and batteries on hand for quick replacement.\nTrain maintenance staff on proper emergency lighting system upkeep." },
+                "Fully Functional": { corrective: "No immediate corrective actions are required for emergency lighting. Maintain current inspection and maintenance schedule.", preventive: "Implement a routine monthly inspection and testing schedule for all emergency lighting.\nKeep spare emergency lighting units and batteries on hand for quick replacement.\nTrain maintenance staff on proper emergency lighting system upkeep." },
+            };
+            return actionMap[observation] || { corrective: "", preventive: "" };
+        }
+
+        // --- Photo Handling (Initial) ---
+        function previewPhoto(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const previewImg = document.getElementById('preview-img');
+                previewImg.src = reader.result;
+                currentPhotoDataUrl = reader.result; // Save Data URL for later use
+                document.getElementById('photo-preview').classList.remove('hidden');
+            };
+            currentPhoto = event.target.files[0]; // Save the file object
+            reader.readAsDataURL(currentPhoto);
+        }
+
+        // MODIFIED: This function no longer calls an API for analysis.
+        // It now directly proceeds to the hazard form page.
+        function submitPhoto() {
+            if (!currentPhoto || !currentPhotoDataUrl) {
+                showMessage('Please select a photo first.');
+                return;
+            }
+            // Photo is now stored in currentPhoto and currentPhotoDataUrl
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('photo-input').value = ''; // Reset the photo input
+            showPage('hazard-form-page'); // Directly go to the hazard form
+            showMessage('Photo captured. Please fill in hazard details.');
+        }
+
+        // --- Utility function to convert Data URL to Blob ---
+        function dataURLtoBlob(dataurl) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
+
+        // --- Hazard Form Submission ---
+        document.getElementById('hazard-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Validate required fields (excluding corrective and preventive actions)
+            const requiredFields = [
+                'observation-date',
+                'hazard-category',
+                'observation-type',
+                'description',
+                'location',
+                'assign-to',
+                'due-date',
+                'status'
+            ];
+            let missing = [];
+            for (const id of requiredFields) {
+                const el = document.getElementById(id);
+                if (!el.value || (el.type === 'select-one' && el.value === '')) {
+                    missing.push(el.previousElementSibling ? el.previousElementSibling.textContent : id);
+                }
+            }
+            if (missing.length > 0) {
+                showNotification('Please fill in all required fields: ' + missing.join(', '), 'error');
+                return;
+            }
+
+            // Disable the submit button to prevent multiple submissions
+            const submitBtn = document.querySelector('#hazard-form button[type="submit"]');
+            const submitText = document.getElementById('hazard-submit-text');
+            const submitSpinner = document.getElementById('hazard-submit-spinner');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                if (submitText) submitText.textContent = 'Submitting...';
+                if (submitSpinner) submitSpinner.classList.remove('hidden');
+            }
+
+            const formData = new FormData();
+            const editingId = this.dataset.editingId;
+            const action = editingId ? 'update_observation' : 'save_observation';
+            formData.append('action', action);
+
+            if (editingId) {
+                formData.append('id', editingId);
+            }
+
+            // Add all form fields
+            formData.append('timestamp', document.getElementById('observation-date').value);
+            formData.append('category', document.getElementById('hazard-category').value);
+            formData.append('observation_type', document.getElementById('observation-type').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('corrective_actions', document.getElementById('corrective-actions').value);
+            formData.append('preventive_actions', document.getElementById('preventive-actions').value);
+            formData.append('location', document.getElementById('location').value);
+            formData.append('assign_to', document.getElementById('assign-to').value);
+            formData.append('due_date', document.getElementById('due-date').value);
+            formData.append('status', document.getElementById('status').value);
+            formData.append('generated_by', loggedInUser);
+
+            // Add initial photo if it exists and this is a new observation
+            if (currentPhotoDataUrl && action === 'save_observation') {
+                const initialPhotoBlob = dataURLtoBlob(currentPhotoDataUrl);
+                formData.append('initial_image', initialPhotoBlob, currentPhoto ? currentPhoto.name : 'initial_photo.png');
+            }
+
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(action === 'save_observation' ? 'Report submitted successfully!' : 'Report updated successfully!', 'success');
+                    this.reset();
+                    currentPhoto = null;
+                    currentPhotoDataUrl = null;
+                    document.getElementById('photo-preview').classList.add('hidden');
+                    delete this.dataset.editingId;
+                    if (submitBtn) {
+                        if (submitText) submitText.textContent = 'Submit Report';
+                        if (submitSpinner) submitSpinner.classList.add('hidden');
+                        submitBtn.disabled = false;
+                    }
+                    // Automatically transition to report table page
+                    setTimeout(() => {
+                        showPage('report-table-page');
+                    }, 1000);
+                } else {
+                    showNotification('Operation failed: ' + (result.message || 'Unknown error occurred'), 'error');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        if (submitText) submitText.textContent = editingId ? 'Update Report' : 'Submit Report';
+                        if (submitSpinner) submitSpinner.classList.add('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Error during observation operation:', error);
+                showNotification('An error occurred while submitting the report. Please try again.', 'error');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (submitText) submitText.textContent = editingId ? 'Update Report' : 'Submit Report';
+                    if (submitSpinner) submitSpinner.classList.add('hidden');
+                }
+            }
+        });
+
+        // --- Observation Report Table ---
+        // Infinite scroll variables
+        let currentOffset = 0;
+        const pageLimit = 10;
+        let isLoading = false;
+        let hasMoreData = true;
+        let filteredObservations = [];
+
+        // Filter state management
+        let filterState = {
+            location: '',
+            status: '',
+            category: '',
+            observation_type: '',
+            assign_to: '', // changed from assigned_to to assign_to for consistency
+            start_date: '',
+            end_date: ''
+        };
+
+        // Initialize filters from URL parameters or localStorage
+        function initializeFilters() {
+            const savedFilters = localStorage.getItem('observationFilters');
+            if (savedFilters) {
+                filterState = JSON.parse(savedFilters);
+                Object.entries(filterState).forEach(([key, value]) => {
+                    const element = document.getElementById(`filter-${key}`);
+                    if (element) element.value = value;
+                });
+            }
+            updateActiveFiltersCount();
+        }
+
+        // Save filters to localStorage
+        function saveFilters() {
+            localStorage.setItem('observationFilters', JSON.stringify(filterState));
+            updateActiveFiltersCount();
+        }
+
+        // Clear all filters
+        function clearAllFilters() {
+            filterState = {
+                location: '',
+                status: '',
+                category: '',
+                observation_type: '',
+                assign_to: '',
+                start_date: '',
+                end_date: ''
+            };
+            Object.keys(filterState).forEach(key => {
+                const element = document.getElementById(`filter-${key}`);
+                if (element) element.value = '';
+            });
+            localStorage.removeItem('observationFilters');
+            updateActiveFiltersCount();
+            loadObservations(true);
+        }
+
+        // Update active filters count
+        function updateActiveFiltersCount() {
+            const activeCount = Object.values(filterState).filter(value => value !== '').length;
+            const countElement = document.getElementById('active-filters-count');
+            if (activeCount > 0) {
+                countElement.textContent = `${activeCount} active filter${activeCount > 1 ? 's' : ''}`;
+            } else {
+                countElement.textContent = '';
+            }
+        }
+
+        // Add event listeners to update filterState and save on change
+        function setupFilterListeners() {
+            const filterKeys = Object.keys(filterState);
+            filterKeys.forEach(key => {
+                const element = document.getElementById(`filter-${key}`);
+                if (element) {
+                    element.addEventListener('change', function() {
+                        filterState[key] = this.value;
+                        saveFilters();
+                        loadObservations();
+                    });
+                }
+            });
+        }
+
+        // Update filter options based on available data
+        function updateFilterOptions() {
+            const locations = new Set();
+            const categories = new Set();
+            const assignees = new Set();
+
+            observations.forEach(obs => {
+                if (obs.location) locations.add(obs.location);
+                if (obs.category) categories.add(obs.category);
+                if (obs.assign_to) assignees.add(obs.assign_to);
+            });
+
+            // Update Location options
+            const locationSelect = document.getElementById('filter-location');
+            const currentLocation = locationSelect.value;
+            locationSelect.innerHTML = '<option value="">All Locations</option>';
+            [...locations].sort().forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc;
+                option.textContent = loc;
+                locationSelect.appendChild(option);
+            });
+            locationSelect.value = currentLocation;
+
+            // Update Category options
+            const categorySelect = document.getElementById('filter-category');
+            const currentCategory = categorySelect.value;
+            categorySelect.innerHTML = '<option value="">All Categories</option>';
+            [...categories].sort().forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+            categorySelect.value = currentCategory;
+
+            // Update Assigned To options
+            const assignedToSelect = document.getElementById('filter-assign_to');
+            const currentAssignee = assignedToSelect.value;
+            assignedToSelect.innerHTML = '<option value="">All Assignees</option>';
+            [...assignees].sort().forEach(assignee => {
+                const option = document.createElement('option');
+                option.value = assignee;
+                option.textContent = assignee;
+                assignedToSelect.appendChild(option);
+            });
+            assignedToSelect.value = currentAssignee;
+        }
+
+        // Function to update summary card
+        function updateSummaryCard(summary) {
+            document.getElementById('summary-total').textContent = summary.total || 0;
+            document.getElementById('summary-open').textContent = summary.open || 0;
+            document.getElementById('summary-closed').textContent = summary.closed || 0;
+            document.getElementById('summary-closure-rate').textContent = (summary.closure_rate || 0) + '%';
+            document.getElementById('summary-unsafe-acts').textContent = summary.unsafe_acts || 0;
+            document.getElementById('summary-unsafe-conditions').textContent = summary.unsafe_conditions || 0;
+        }
+
+        // Function to load observations with filters
+        async function loadObservations() {
+            console.log('Loading observations for page:', currentPage);
+            try {
+                const formData = new FormData();
+                formData.append('action', 'get_observations');
+                formData.append('limit', itemsPerPage.toString());
+                formData.append('offset', ((currentPage - 1) * itemsPerPage).toString());
+                
+                // Add filters
+                const filters = getFilterValues();
+                Object.entries(filters).forEach(([key, value]) => {
+                    if (value) formData.append(key, value);
+                });
+
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update summary card
+                    updateSummaryCard(result.summary);
+                    
+                    // Update observation cards
+                    const container = document.getElementById('observation-card-container');
+                    container.innerHTML = '';
+                    result.observations.forEach(observation => {
+                        container.innerHTML += renderObservationCard(observation);
+                    });
+
+                    // Update pagination controls
+                    updatePaginationControls(result.pagination);
+                    
+                    // Only update active filter cards (filter dropdowns are populated globally)
+                    renderActiveFilterCards();
+                } else {
+                    showNotification(result.message || 'Failed to load observations', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading observations:', error);
+                showNotification('Error loading observations. Please try again.', 'error');
+            }
+        }
+
+        // On DOMContentLoaded, initialize filters and setup listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFilters();
+            setupFilterListeners();
+            // ... existing code ...
+            const savedUsername = localStorage.getItem('username');
+            if (savedUsername) {
+                checkLoginStatus();
+            }
+            renderActiveFilterCards();
+            fetchAndPopulateFilterOptions();
+        });
+
+        // Add event listeners for filter changes
+        document.getElementById('filter-location').addEventListener('change', loadObservations);
+        document.getElementById('filter-status').addEventListener('change', loadObservations);
+        document.getElementById('filter-category').addEventListener('change', loadObservations);
+        document.getElementById('filter-observation-type').addEventListener('change', loadObservations);
+        document.getElementById('filter-assign_to').addEventListener('change', loadObservations);
+        document.getElementById('filter-start-date').addEventListener('change', loadObservations);
+        document.getElementById('filter-end-date').addEventListener('change', loadObservations);
+
+        // Load observations when the report page is shown
+        function showPage(pageId) {
+            // Hide all sections first
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Check if user is trying to access protected pages without being logged in
+            if (pageId !== 'login-page' && pageId !== 'register-page' && !loggedInUser) {
+                showPage('login-page');
+                showNotification('Please login to access this page', 'error');
+                return;
+            }
+
+            // Show the requested page
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            // Show/hide header based on page
+            const mainNav = document.getElementById('main-nav');
+            if (pageId === 'login-page' || pageId === 'register-page') {
+                mainNav.classList.add('hidden');
+                document.body.classList.remove('pt-20');
+            } else {
+                mainNav.classList.remove('hidden');
+                document.body.classList.add('pt-20');
+            }
+            
+            if (pageId === 'hazard-form-page') {
+                setCurrentDateTime();
+            } else if (pageId === 'main-page' || pageId === 'report-table-page') {
+                loadObservations();
+            }
+        }
+
+        // --- Corrective Photo Modal Functions ---
+        function openCorrectivePhotoModal(observationId) {
+            selectedObservationIdForCorrective = observationId;
+            document.getElementById('corrective-photo-modal').classList.remove('hidden');
+            // Clear any previous preview
+            document.getElementById('corrective-photo-preview').classList.add('hidden');
+            document.getElementById('corrective-preview-img').src = '';
+            document.getElementById('corrective-photo-input').value = ''; // Clear file input
+        }
+
+        function closeCorrectivePhotoModal() {
+            document.getElementById('corrective-photo-modal').classList.add('hidden');
+            selectedObservationIdForCorrective = null;
+            currentCorrectivePhotoFile = null; // Clear the file object
+        }
+
+        // Update event listener to set global variable when a file is selected
+        document.getElementById('corrective-photo-input').addEventListener('change', function(event) {
+            if (event.target.files && event.target.files.length > 0) {
+                currentCorrectivePhotoFile = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(){
+                    const previewImg = document.getElementById('corrective-preview-img');
+                    previewImg.src = reader.result;
+                    document.getElementById('corrective-photo-preview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(currentCorrectivePhotoFile);
+            } else {
+                currentCorrectivePhotoFile = null;
+                document.getElementById('corrective-photo-preview').classList.add('hidden');
+            }
+        });
+
+        // Modified submission function using the file input directly
+        async function submitCorrectivePhoto() {
+            if (!selectedObservationIdForCorrective) {
+                showMessage('No observation selected for corrective action. Please select an observation first.');
+                return;
+            }
+            
+            // Get the file directly from the input element
+            const correctiveInput = document.getElementById('corrective-photo-input');
+            const file = correctiveInput.files[0];
+            if (!file) {
+                showMessage('Please select a corrective action photo.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'update_observation_status'); // Ensure your API supports this action.
+            formData.append('id', selectedObservationIdForCorrective);
+            formData.append('status', 'Closed');
+            formData.append('corrective_image', file, file.name);
+    
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('Corrective action photo submitted successfully. The report is now closed.');
+                    closeCorrectivePhotoModal();
+                    loadObservations(); // Refresh the observation list to update status.
+                } else {
+                    showMessage('Failed to update observation status: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating observation status:', error);
+                showMessage('An error occurred while updating the observation status.');
+            }
+        }
+
+
+        // --- PDF Generation ---
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            // Create landscape PDF for better table layout
+            const doc = new jsPDF('landscape');
+            
+            // Add header with styling
+            doc.setFontSize(20);
+            doc.setTextColor(0, 102, 204);
+            doc.text("Safety Observation Report", 14, 15);
+            
+            // Add report metadata
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            const currentDate = new Date().toLocaleString();
+            doc.text(`Report Generated: ${currentDate}`, 14, 22);
+            doc.text(`Generated By: ${loggedInUser || 'N/A'}`, 14, 27);
+
+            // Fetch observations to ensure fresh data
+            const formData = new FormData();
+            formData.append('action', 'get_observations');
+            const response = await fetch('api.php', { method: 'POST', body: formData, credentials: 'include' });
+            const result = await response.json();
+
+            if (!result.success || result.observations.length === 0) {
+                showMessage('No observations to generate PDF report.');
+                return;
+            }
+
+            // Add summary statistics
+            const totalObs = result.observations.length;
+            const openObs = result.observations.filter(obs => obs.status === 'Open').length;
+            const closedObs = result.observations.filter(obs => obs.status === 'Closed').length;
+            
+            doc.text('Summary:', 14, 35);
+            doc.text(`Total Observations: ${totalObs}`, 14, 40);
+            doc.text(`Open: ${openObs}`, 14, 45);
+            doc.text(`Closed: ${closedObs}`, 14, 50);
+            doc.text(`Closure Rate: ${((closedObs/totalObs) * 100).toFixed(1)}%`, 14, 55);
+
+            // Define comprehensive table columns
+            const tableColumn = [
+                "ID",
+                "Date/Time",
+                "Category",
+                "Type",
+                "Location",
+                "Description",
+                "Corrective Actions",
+                "Preventive Actions",
+                "Assigned To",
+                "Due Date",
+                "Status",
+                "Generated By"
+            ];
+
+            // Prepare table rows with all available data
+            const tableRows = result.observations.map(obs => [
+                obs.id,
+                obs.timestamp,
+                obs.category,
+                obs.observation_type,
+                obs.location,
+                obs.description,
+                obs.corrective_actions || 'N/A',
+                obs.preventive_actions || 'N/A',
+                obs.assign_to || 'N/A',
+                obs.due_date || 'N/A',
+                obs.status,
+                obs.generated_by || 'N/A'
+            ]);
+
+            // Add the table with enhanced styling
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 65,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [0, 102, 204],
+                    textColor: 255,
+                    fontSize: 8,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                bodyStyles: {
+                    fontSize: 7,
+                    textColor: 50
+                },
+                columnStyles: {
+                    0: { cellWidth: 15 }, // ID
+                    1: { cellWidth: 25 }, // Date/Time
+                    2: { cellWidth: 25 }, // Category
+                    3: { cellWidth: 25 }, // Type
+                    4: { cellWidth: 25 }, // Location
+                    5: { cellWidth: 'auto' }, // Description
+                    6: { cellWidth: 'auto' }, // Corrective Actions
+                    7: { cellWidth: 'auto' }, // Preventive Actions
+                    8: { cellWidth: 25 }, // Assigned To
+                    9: { cellWidth: 25 }, // Due Date
+                    10: { cellWidth: 20 }, // Status
+                    11: { cellWidth: 25 } // Generated By
+                },
+                didDrawCell: function(data) {
+                    // Handle long text in description and corrective actions
+                    if (data.section === 'body' && (data.column.index === 5 || data.column.index === 6)) {
+                        const text = data.cell.text;
+                        const lines = doc.splitTextToSize(text, data.cell.contentWidth);
+                        data.cell.text = lines;
+                    }
+                },
+                didDrawPage: function(data) {
+                    // Add page number at the bottom
+                    doc.setFontSize(8);
+                    doc.text(`Page ${data.pageNumber}`, doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10);
+                }
+            });
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `Safety_Observation_Report_${timestamp}.pdf`;
+            
+            doc.save(filename);
+            showMessage('Enhanced PDF report generated successfully!');
+        }
+
+        // --- CSV Export ---
+        // Removed exportCSV function as the button was replaced.
+
+        // --- Custom Message Display (modal instead of alert) ---
+        function showMessage(message) {
+            document.getElementById('message-text').textContent = message;
+            document.getElementById('message-modal').classList.remove('hidden');
+        }
+
+        function closeMessageModal() {
+            document.getElementById('message-modal').classList.add('hidden');
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-yellow-500'
+            } text-white`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Animate in
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+            notification.style.transition = 'all 0.3s ease-in-out';
+
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateY(0)';
+            }, 100);
+
+            // Animate out and remove
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add JS functions: toggleCommentBox, submitComment, fetchComments, renderComments
+        function toggleCommentBox(observationId) {
+            const box = document.getElementById(`comment-box-${observationId}`);
+            if (box.classList.contains('hidden')) {
+                box.classList.remove('hidden');
+                fetchComments(observationId);
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+
+        async function submitComment(event, observationId) {
+            event.preventDefault();
+            const input = event.target.querySelector('input[type="text"]');
+            const commentText = input.value.trim();
+            if (!commentText) return;
+            const formData = new FormData();
+            formData.append('action', 'save_comment');
+            formData.append('observation_id', observationId);
+            formData.append('comment_text', commentText);
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    input.value = '';
+                    fetchComments(observationId);
+                    // Update comment count badge
+                    const badge = document.querySelector(`#comments-list-${observationId}`).parentElement.querySelector('button[title="Comment"] span');
+                    if (badge) badge.textContent = (parseInt(badge.textContent) + 1).toString();
+                } else {
+                    showMessage(result.message || 'Failed to post comment.');
+                }
+            } catch (error) {
+                showMessage('Error posting comment.');
+            }
+        }
+
+        async function fetchComments(observationId) {
+            const formData = new FormData();
+            formData.append('action', 'get_comments');
+            formData.append('observation_id', observationId);
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    renderComments(observationId, result.comments);
+                } else {
+                    renderComments(observationId, []);
+                }
+            } catch (error) {
+                renderComments(observationId, []);
+            }
+        }
+
+        function renderComments(observationId, comments) {
+            const list = document.getElementById(`comments-list-${observationId}`);
+            if (!list) return;
+            if (!comments || comments.length === 0) {
+                list.innerHTML = '<div class="text-xs text-gray-400">No comments yet.</div>';
+                return;
+            }
+            list.innerHTML = comments.map(c => `
+                <div class="flex items-start gap-2">
+                    <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-blue-700">${c.user ? c.user[0].toUpperCase() : 'U'}</div>
+                    <div class="flex-1 bg-gray-100 rounded px-2 py-1">
+                        <div class="text-xs font-semibold text-gray-700">${c.user || 'User'}</div>
+                        <div class="text-xs text-gray-600">${c.comment_text}</div>
+                        <div class="text-[10px] text-gray-400">${c.created_at ? new Date(c.created_at).toLocaleString() : ''}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add filter logic and image modal logic
+        let filterLocation = '';
+        let filterStatus = '';
+
+        function showImageModal(imgUrl) {
+            document.getElementById('modal-img').src = imgUrl;
+            document.getElementById('image-modal').classList.remove('hidden');
+        }
+        function closeImageModal() {
+            document.getElementById('image-modal').classList.add('hidden');
+            document.getElementById('modal-img').src = '';
+        }
+
+        async function fetchDashboardData() {
+            const isApiConnected = await checkApiConnection();
+            
+            if (!isApiConnected) {
+                showNotification('Using static data - API not connected', 'warning');
+                // Use static data
+                const staticData = {
+                    total: 20,
+                    open: 5,
+                    closed: 15,
+                    total_closure_rate: 75,
+                    ontime_closure_rate: 80,
+                    categories: [
+                        { category: 'Physical', count: 8 },
+                        { category: 'Chemical', count: 5 },
+                        { category: 'Biological', count: 3 },
+                        { category: 'Mechanical', count: 4 }
+                    ],
+                    // ... more static data
+                };
+                updateDashboardStats(staticData);
+                renderAllCharts(staticData);
+                return;
+            }
+            // ... API call code
+        }
+
+        // Add these new functions for the collapsible content
+        function toggleText(elementId) {
+            const element = document.getElementById(elementId);
+            const button = element.nextElementSibling;
+            if (element.classList.contains('line-clamp-2')) {
+                element.classList.remove('line-clamp-2');
+                button.textContent = 'See less';
+            } else {
+                element.classList.add('line-clamp-2');
+                button.textContent = 'See more';
+            }
+        }
+
+        function toggleDetails(observationId) {
+            const detailsElement = document.getElementById(`details-${observationId}`);
+            const toggleText = document.getElementById(`toggle-text-${observationId}`);
+            
+            if (detailsElement.classList.contains('hidden')) {
+                detailsElement.classList.remove('hidden');
+                toggleText.textContent = 'Hide Details';
+            } else {
+                detailsElement.classList.add('hidden');
+                toggleText.textContent = 'Show Details';
+            }
+        }
+
+        // Add these variables at the top with other global variables
+        let observationToDelete = null;
+
+        // Add these functions for delete functionality
+        function openDeleteModal(observationId) {
+            // Only allow if called from a click event on the delete button
+            if (!observationId) {
+                showNotification('Invalid observation ID', 'error');
+                return;
+            }
+            // Defensive: Check the event target if possible
+            if (window.event && window.event.type !== 'click') {
+                console.warn('openDeleteModal called from non-click event:', window.event);
+                return;
+            }
+            observationToDelete = observationId;
+            document.getElementById('delete-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-confirm-modal').classList.add('hidden');
+            observationToDelete = null;
+        }
+
+        async function confirmDelete() {
+            if (!observationToDelete) {
+                showNotification('No observation selected for deletion', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=delete_observation&id=' + encodeURIComponent(observationToDelete),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Observation deleted successfully', 'success');
+                    // Remove the card from the DOM
+                    const card = document.querySelector(`[data-observation-id='${observationToDelete}']`);
+                    if (card) card.remove();
+                    // Optionally, reload observations in the background
+                    loadObservations();
+                    closeDeleteModal();
+                } else {
+                    showNotification(result.message || 'Failed to delete report', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting observation:', error);
+                showNotification('Error deleting report: ' + error.message, 'error');
+            }
+        }
+
+        // Update the editObservation function to handle errors better
+        async function editObservation(observationId) {
+            if (!observationId) {
+                showNotification('Invalid observation ID', 'error');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'get_observation');
+                formData.append('id', observationId);
+
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const observation = result.observation;
+                    
+                    // Set form values
+                    document.getElementById('observation-date').value = observation.timestamp;
+                    document.getElementById('hazard-category').value = observation.category;
+                    document.getElementById('observation-type').value = observation.observation_type;
+                    document.getElementById('description').value = observation.description;
+                    document.getElementById('corrective-actions').value = observation.corrective_actions;
+                    document.getElementById('preventive-actions').value = observation.preventive_actions;
+                    document.getElementById('location').value = observation.location;
+                    document.getElementById('assign-to').value = observation.assign_to;
+                    document.getElementById('due-date').value = observation.due_date;
+                    document.getElementById('status').value = observation.status;
+
+                    // Store the observation ID for update
+                    const form = document.getElementById('hazard-form');
+                    form.dataset.editingId = observationId;
+                    
+                    // Update submit button text
+                    document.querySelector('#hazard-form button[type="submit"]').textContent = 'Update Report';
+                    
+                    // Show the form page
+                    showPage('hazard-form-page');
+                } else {
+                    showNotification(result.message || 'Failed to load observation details', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading observation details:', error);
+                showNotification('Error loading observation details: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteObservation(observationId) {
+            if (!observationId) {
+                showNotification('Invalid observation ID', 'error');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this observation?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=delete_observation&id=' + encodeURIComponent(observationId),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Observation deleted successfully', 'success');
+                    // Remove the card from the DOM
+                    const card = document.querySelector(`[data-observation-id='${observationId}']`);
+                    if (card) card.remove();
+                    // Optionally, reload observations in the background
+                    loadObservations();
+                } else {
+                    showNotification(result.message || 'Failed to delete observation', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('An error occurred while deleting the observation', 'error');
+            }
+        }
+
+        function renderObservationCard(observation) {
+            const initials = observation.generated_by ? observation.generated_by.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U';
+            const statusColor = observation.status === 'Open' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600';
+            
+            return `
+                <div class="bg-white rounded-xl shadow p-4 mb-4 transition-transform duration-200 hover:scale-[1.02] hover:shadow-xl" data-observation-id="${observation.id}">
+                    <!-- Header with User Info and Status -->
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-blue-700 mr-3 border">${initials}</div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">${observation.generated_by || 'User'}</div>
+                            <div class="text-xs text-gray-500">${observation.timestamp}</div>
+                        </div>
+                        <span class="ml-2 px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${observation.status}</span>
+                    </div>
+
+                    <!-- Category and Type -->
+                    <div class="mb-3">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-sm font-semibold text-gray-700">Category:</span>
+                            <span class="text-sm text-gray-600">${observation.category || '-'}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-gray-700">Type:</span>
+                            <span class="text-sm text-gray-600">${observation.observation_type || '-'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Findings with See More -->
+                    <div class="mb-3">
+                        <div class="text-sm font-semibold text-gray-700 mb-1">Findings:</div>
+                        <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                            <div id="findings-${observation.id}" class="line-clamp-2">${observation.description || 'No description provided'}</div>
+                            ${observation.description && observation.description.length > 150 ? `
+                                <button onclick="toggleText('findings-${observation.id}')" class="text-blue-600 text-xs mt-1 hover:text-blue-800">
+                                    See more
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Before/After Images -->
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div class="flex flex-col items-center bg-gray-50 rounded-lg p-2">
+                            <div class="text-xs text-gray-500 mb-1">Before</div>
+                            ${observation.initial_image_data_url ? `
+                                <div class="w-full aspect-square relative group cursor-pointer" onclick="showImageModal('${observation.initial_image_data_url}')">
+                                    <img src="${observation.initial_image_data_url}" alt="Before" 
+                                        class="w-full h-full object-cover rounded-md border transition-transform duration-200 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-md transition-all duration-200"></div>
+                                </div>
+                            ` : `
+                                <div class="w-full aspect-square flex items-center justify-center bg-gray-100 text-gray-400 rounded-md border">
+                                    No Image
+                                </div>
+                            `}
+                        </div>
+                        <div class="flex flex-col items-center bg-gray-50 rounded-lg p-2">
+                            <div class="text-xs text-gray-500 mb-1">After</div>
+                            ${observation.corrective_photo_data_url ? `
+                                <div class="w-full aspect-square relative group cursor-pointer" onclick="showImageModal('${observation.corrective_photo_data_url}')">
+                                    <img src="${observation.corrective_photo_data_url}" alt="After" 
+                                        class="w-full h-full object-cover rounded-md border transition-transform duration-200 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-md transition-all duration-200"></div>
+                                </div>
+                            ` : `
+                                <div class="w-full aspect-square flex items-center justify-center bg-gray-100 text-gray-400 rounded-md border">
+                                    No Image
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Content -->
+                    <div id="details-${observation.id}" class="hidden">
+                        <!-- Corrective Actions -->
+                        <div class="mb-3">
+                            <div class="text-sm font-semibold text-gray-700 mb-1">Corrective Actions:</div>
+                            <div class="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">${observation.corrective_actions || 'No corrective actions specified'}</div>
+                        </div>
+
+                        <!-- Location and PIC -->
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <div class="text-sm font-semibold text-gray-700 mb-1">Location:</div>
+                                <div class="text-sm text-gray-600">${observation.location || '-'}</div>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-gray-700 mb-1">PIC:</div>
+                                <div class="text-sm text-gray-600">${observation.assign_to || '-'}</div>
+                            </div>
+                        </div>
+
+                        <!-- Due Date -->
+                        <div class="mb-3">
+                            <div class="text-sm font-semibold text-gray-700 mb-1">Due Date:</div>
+                            <div class="text-sm text-gray-600">${observation.due_date || 'No due date set'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2 mt-2 justify-between">
+                        <button onclick="toggleDetails('${observation.id}')" class="flex items-center justify-center px-3 py-1 rounded-full hover:bg-gray-100 text-gray-600 border border-gray-200 text-sm">
+                            <span id="toggle-text-${observation.id}">Show Details</span>
+                        </button>
+                        <div class="flex gap-2">
+                            <a class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-blue-100 text-blue-600 border border-blue-200" title="Edit" href="edit_observation.php?id=${observation.id}&from=index">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m-1 0v14m-7-7h14" />
+                                </svg>
+                            </a>
+                            ${observation.status === 'Open' ? `
+                                <button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-green-100 text-green-600 border border-green-200" title="Add Corrective Photo & Close" onclick="openCorrectivePhotoModal('${observation.id}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </button>
+                            ` : ''}
+                            <button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 text-gray-600 border border-gray-200 relative" title="Comment" onclick="toggleCommentBox('${observation.id}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.77 9.77 0 01-4-.8l-4.28 1.07a1 1 0 01-1.22-1.22l1.07-4.28A8.96 8.96 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full px-1.5">${observation.comment_count || 0}</span>
+                            </button>
+                            <!-- Delete button removed for user view -->
+                        </div>
+                    </div>
+
+                    <!-- Comment Section -->
+                    <div id="comment-box-${observation.id}" class="hidden mt-2">
+                        <form onsubmit="submitComment(event, '${observation.id}')" class="flex gap-2">
+                            <input type="text" id="comment-input-${observation.id}" name="comment-input-${observation.id}" class="flex-1 border rounded px-2 py-1 text-sm" placeholder="Write a comment..." required />
+                            <button type="submit" class="bg-blue-500 text-white rounded px-3 py-1 text-sm">Post</button>
+                        </form>
+                    </div>
+                    <div id="comments-list-${observation.id}" class="mt-2 space-y-1"></div>
+                </div>
+            `;
+        }
+
+        // --- Notification for New Observations ---
+        // --- WebSocket Push Notification for New Observations ---
+        // Remove WebSocket notification code
+        // Optionally, restore the previous polling-based notification system if needed
+
+        // Remove filterState, initializeFilters, saveFilters, updateActiveFiltersCount, setupFilterListeners, updateFilterOptions
+        // Add SOR_Report style filter logic:
+        flatpickr("#date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            onChange: function(selectedDates) {
+                if (selectedDates.length === 2) {
+                    document.getElementById('filter-start-date').value = selectedDates[0].toISOString().split('T')[0];
+                    document.getElementById('filter-end-date').value = selectedDates[1].toISOString().split('T')[0];
+                }
+            }
+        });
+        function getFilterValues() {
+            return {
+                category: document.getElementById('filter-category').value,
+                observation_type: document.getElementById('filter-observation-type').value,
+                location: document.getElementById('filter-location').value,
+                status: document.getElementById('filter-status').value,
+                start_date: document.getElementById('filter-start-date').value,
+                end_date: document.getElementById('filter-end-date').value
+            };
+        }
+        function applyFilters() {
+            currentPage = 1; // Reset to first page when applying filters
+            loadObservations();
+            renderActiveFilterCards();
+        }
+        function clearFilters() {
+            currentPage = 1; // Reset to first page when clearing filters
+            document.getElementById('filter-category').value = '';
+            document.getElementById('filter-observation-type').value = '';
+            document.getElementById('filter-location').value = '';
+            document.getElementById('filter-status').value = '';
+            document.getElementById('date-range').value = '';
+            document.getElementById('filter-start-date').value = '';
+            document.getElementById('filter-end-date').value = '';
+            loadObservations();
+            renderActiveFilterCards();
+        }
+
+        // Add this function to dynamically populate the location dropdown after loading observations
+        function updateLocationFilterOptions(observations) {
+            const locationSelect = document.getElementById('filter-location');
+            const currentValue = locationSelect.value;
+            const locations = Array.from(new Set(observations.map(obs => obs.location).filter(Boolean)));
+            locationSelect.innerHTML = '<option value="">All Locations</option>';
+            locations.sort().forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc;
+                option.textContent = loc;
+                locationSelect.appendChild(option);
+            });
+            locationSelect.value = currentValue;
+        }
+
+        // Add this function to render active filter cards in a stack/array position
+        function renderActiveFilterCards() {
+            const filters = getFilterValues();
+            const filterNames = {
+                category: 'Category',
+                observation_type: 'Type',
+                location: 'Location',
+                status: 'Status',
+                start_date: 'Start Date',
+                end_date: 'End Date'
+            };
+            const order = ['category', 'observation_type', 'location', 'status', 'start_date', 'end_date'];
+            const container = document.getElementById('active-filter-cards');
+            container.innerHTML = '';
+            order.forEach(key => {
+                if (filters[key]) {
+                    // For date range, only show if both start and end
+                    if ((key === 'start_date' || key === 'end_date') && (!filters['start_date'] || !filters['end_date'])) return;
+                    const card = document.createElement('div');
+                    card.className = 'flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full shadow text-sm font-medium';
+                    let label = filterNames[key] + ': ' + filters[key];
+                    if (key === 'start_date') label = 'Date: ' + filters['start_date'] + ' to ' + filters['end_date'];
+                    if (key === 'end_date') return; // skip, handled by start_date
+                    card.innerHTML = `${label} <button onclick="removeFilter('${key}')" class="ml-2 text-blue-500 hover:text-red-500 font-bold focus:outline-none">&times;</button>`;
+                    container.appendChild(card);
+                }
+            });
+        }
+
+        // Remove a filter and reload
+        function removeFilter(key) {
+            if (key === 'start_date' || key === 'end_date') {
+                document.getElementById('date-range').value = '';
+                document.getElementById('filter-start-date').value = '';
+                document.getElementById('filter-end-date').value = '';
+            } else {
+                document.getElementById('filter-' + key).value = '';
+            }
+            loadObservations();
+            renderActiveFilterCards();
+        }
+
+        // Add pagination control functions
+        function updatePaginationControls(pagination) {
+            document.getElementById('current-page').textContent = pagination.page;
+            document.getElementById('total-pages').textContent = pagination.total_pages;
+            document.getElementById('total-items').textContent = pagination.total;
+            
+            // Update button states
+            document.getElementById('prev-page').disabled = pagination.page <= 1;
+            document.getElementById('next-page').disabled = pagination.page >= pagination.total_pages;
+        }
+
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+                console.log('Prev page clicked. New currentPage:', currentPage);
+                loadObservations();
+            } else if (direction === 'next') {
+                // Get the total number of pages from the UI
+                const totalPages = parseInt(document.getElementById('total-pages').textContent, 10);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    console.log('Next page clicked. New currentPage:', currentPage);
+                    loadObservations();
+                } else {
+                    console.log('Next page clicked, but already at last page.');
+                }
+            }
+        }
+
+        // Fetch and populate filter options from the backend
+        async function fetchAndPopulateFilterOptions() {
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    body: new URLSearchParams({ action: 'get_filter_options' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    // Populate location filter
+                    const locationSelect = document.getElementById('filter-location');
+                    const currentLocation = locationSelect.value;
+                    locationSelect.innerHTML = '<option value="">All Locations</option>';
+                    result.locations.forEach(loc => {
+                        const option = document.createElement('option');
+                        option.value = loc;
+                        option.textContent = loc;
+                        locationSelect.appendChild(option);
+                    });
+                    locationSelect.value = currentLocation;
+                    // Populate category filter
+                    const categorySelect = document.getElementById('filter-category');
+                    const currentCategory = categorySelect.value;
+                    categorySelect.innerHTML = '<option value="">All Categories</option>';
+                    result.categories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat;
+                        categorySelect.appendChild(option);
+                    });
+                    categorySelect.value = currentCategory;
+                    // Populate assign_to filter if present
+                    const assignToSelect = document.getElementById('filter-assign_to');
+                    if (assignToSelect) {
+                        const currentAssignee = assignToSelect.value;
+                        assignToSelect.innerHTML = '<option value="">All Assignees</option>';
+                        result.assignees.forEach(assignee => {
+                            const option = document.createElement('option');
+                            option.value = assignee;
+                            option.textContent = assignee;
+                            assignToSelect.appendChild(option);
+                        });
+                        assignToSelect.value = currentAssignee;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch filter options:', error);
+            }
+        }
+        // Call this on page load and after any data change
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndPopulateFilterOptions();
+            // ...existing code...
+        });
+        // Remove or comment out updateLocationFilterOptions and any similar code that repopulates filters from only the current page's data.
+        // ... existing code ...
+    </script>
+</body>
+</html>
